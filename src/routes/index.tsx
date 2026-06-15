@@ -42,7 +42,7 @@ function Landing() {
         <ul className="mt-12 grid gap-4">
           {[
             { Icon: Activity, title: "Chequeo diario de 1 minuto", desc: "Una pregunta por pantalla. Sin tecnicismos." },
-            { Icon: Heart, title: "Valoración geriátrica basal", desc: "Barthel, Lawton y Clinical Frailty Scale en pasos claros." },
+            { Icon: Heart, title: "Define el estado basal", desc: "Responde preguntas sencillas para conocer a tu familiar." },
             { Icon: FileText, title: "Reporte PDF para el médico", desc: "Resumen de 1–2 páginas con tendencia y alertas." },
             { Icon: ShieldCheck, title: "Tus datos protegidos", desc: "Acceso privado por cuidador." },
           ].map(({ Icon, title, desc }) => (
