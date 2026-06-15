@@ -103,7 +103,7 @@ function ChequeoDiario() {
             </div>
           )}
           <Button asChild size="xl" className="mt-8">
-            <Link to="/_app/paciente/$id" params={{ id }}>Volver al perfil</Link>
+            <Link to="/paciente/$id" params={{ id }}>Volver al perfil</Link>
           </Button>
         </main>
       </div>
@@ -114,7 +114,7 @@ function ChequeoDiario() {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="container-app pt-6 pb-3">
         <div className="flex items-center gap-3">
-          <button onClick={() => i === 0 ? navigate({ to: "/_app/paciente/$id", params: { id } }) : setI(i - 1)} className="size-11 rounded-2xl bg-secondary grid place-items-center" aria-label="Atrás">
+          <button onClick={() => i === 0 ? navigate({ to: "/paciente/$id", params: { id } }) : setI(i - 1)} className="size-11 rounded-2xl bg-secondary grid place-items-center" aria-label="Atrás">
             <ArrowLeft className="size-5" />
           </button>
           <div className="flex-1">

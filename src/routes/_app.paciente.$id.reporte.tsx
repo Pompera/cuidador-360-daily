@@ -64,7 +64,7 @@ function ReportePage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="container-app pt-6 pb-4 flex items-center gap-3">
-        <Link to="/_app/paciente/$id" params={{ id }} className="size-11 rounded-2xl bg-secondary grid place-items-center" aria-label="Atrás">
+        <Link to="/paciente/$id" params={{ id }} className="size-11 rounded-2xl bg-secondary grid place-items-center" aria-label="Atrás">
           <ArrowLeft className="size-5" />
         </Link>
         <h1 className="font-display text-2xl font-semibold">Reporte para el médico</h1>
