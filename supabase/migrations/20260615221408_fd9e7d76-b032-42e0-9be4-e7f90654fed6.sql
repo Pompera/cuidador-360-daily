@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS chequeos_patient_fecha_unique ON public.chequeos_diarios (patient_id, fecha);
