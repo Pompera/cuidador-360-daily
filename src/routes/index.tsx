@@ -1,29 +1,63 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Heart, ShieldCheck, FileText, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "Cuidador 360 — Bitácora geriátrica diaria" },
+      { name: "description", content: "Aplicación para cuidadores: registra cambios diarios del adulto mayor y genera un resumen claro para el médico." },
     ],
   }),
-  component: Index,
+  component: Landing,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Landing() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen bg-background">
+      <header className="container-app pt-8 pb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="size-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-display font-bold">C</div>
+          <span className="font-display text-xl font-semibold">Cuidador 360</span>
+        </div>
+        <Link to="/auth" className="text-primary font-semibold">Entrar</Link>
+      </header>
+
+      <main className="container-app pt-6 pb-16">
+        <h1 className="font-display text-[2.5rem] leading-[1.05] font-semibold tracking-tight">
+          Un minuto al día. <span className="text-primary">Cuidado claro</span> toda la vida.
+        </h1>
+        <p className="mt-5 text-lg text-muted-foreground">
+          Registra los cambios diarios del adulto mayor y entrega al médico un resumen
+          fácil de leer en la consulta. Pensado para cuidadores, no para expertos.
+        </p>
+
+        <div className="mt-8 flex flex-col gap-3">
+          <Button asChild size="xl"><Link to="/auth">Comenzar gratis</Link></Button>
+          <p className="text-center text-sm text-muted-foreground">
+            La aplicación no sustituye una valoración médica.
+          </p>
+        </div>
+
+        <ul className="mt-12 grid gap-4">
+          {[
+            { Icon: Activity, title: "Chequeo diario de 1 minuto", desc: "Una pregunta por pantalla. Sin tecnicismos." },
+            { Icon: Heart, title: "Valoración geriátrica basal", desc: "Barthel, Lawton y Clinical Frailty Scale en pasos claros." },
+            { Icon: FileText, title: "Reporte PDF para el médico", desc: "Resumen de 1–2 páginas con tendencia y alertas." },
+            { Icon: ShieldCheck, title: "Tus datos protegidos", desc: "Acceso privado por cuidador." },
+          ].map(({ Icon, title, desc }) => (
+            <li key={title} className="flex gap-4 rounded-3xl border border-border/60 bg-card p-5 shadow-[var(--shadow-soft)]">
+              <div className="size-12 shrink-0 rounded-2xl bg-secondary text-primary grid place-items-center">
+                <Icon className="size-6" />
+              </div>
+              <div>
+                <h3 className="font-display text-lg font-semibold">{title}</h3>
+                <p className="text-muted-foreground">{desc}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </main>
     </div>
   );
 }
