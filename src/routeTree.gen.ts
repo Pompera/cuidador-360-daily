@@ -14,7 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppAppRouteImport } from './routes/_app.app'
 import { Route as AppPacienteNuevoRouteImport } from './routes/_app.paciente.nuevo'
-import { Route as AppPacienteIdRouteImport } from './routes/_app.paciente.$id'
+import { Route as AppPacienteIdIndexRouteImport } from './routes/_app.paciente.$id.index'
 import { Route as AppPacienteIdReporteRouteImport } from './routes/_app.paciente.$id.reporte'
 import { Route as AppPacienteIdChequeoRouteImport } from './routes/_app.paciente.$id.chequeo'
 
@@ -42,39 +42,39 @@ const AppPacienteNuevoRoute = AppPacienteNuevoRouteImport.update({
   path: '/paciente/nuevo',
   getParentRoute: () => AppRoute,
 } as any)
-const AppPacienteIdRoute = AppPacienteIdRouteImport.update({
-  id: '/paciente/$id',
-  path: '/paciente/$id',
+const AppPacienteIdIndexRoute = AppPacienteIdIndexRouteImport.update({
+  id: '/paciente/$id/',
+  path: '/paciente/$id/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPacienteIdReporteRoute = AppPacienteIdReporteRouteImport.update({
-  id: '/reporte',
-  path: '/reporte',
-  getParentRoute: () => AppPacienteIdRoute,
+  id: '/paciente/$id/reporte',
+  path: '/paciente/$id/reporte',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppPacienteIdChequeoRoute = AppPacienteIdChequeoRouteImport.update({
-  id: '/chequeo',
-  path: '/chequeo',
-  getParentRoute: () => AppPacienteIdRoute,
+  id: '/paciente/$id/chequeo',
+  path: '/paciente/$id/chequeo',
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app': typeof AppAppRoute
-  '/paciente/$id': typeof AppPacienteIdRouteWithChildren
   '/paciente/nuevo': typeof AppPacienteNuevoRoute
   '/paciente/$id/chequeo': typeof AppPacienteIdChequeoRoute
   '/paciente/$id/reporte': typeof AppPacienteIdReporteRoute
+  '/paciente/$id/': typeof AppPacienteIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app': typeof AppAppRoute
-  '/paciente/$id': typeof AppPacienteIdRouteWithChildren
   '/paciente/nuevo': typeof AppPacienteNuevoRoute
   '/paciente/$id/chequeo': typeof AppPacienteIdChequeoRoute
   '/paciente/$id/reporte': typeof AppPacienteIdReporteRoute
+  '/paciente/$id': typeof AppPacienteIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -82,10 +82,10 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/_app/app': typeof AppAppRoute
-  '/_app/paciente/$id': typeof AppPacienteIdRouteWithChildren
   '/_app/paciente/nuevo': typeof AppPacienteNuevoRoute
   '/_app/paciente/$id/chequeo': typeof AppPacienteIdChequeoRoute
   '/_app/paciente/$id/reporte': typeof AppPacienteIdReporteRoute
+  '/_app/paciente/$id/': typeof AppPacienteIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -93,29 +93,29 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/app'
-    | '/paciente/$id'
     | '/paciente/nuevo'
     | '/paciente/$id/chequeo'
     | '/paciente/$id/reporte'
+    | '/paciente/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/app'
-    | '/paciente/$id'
     | '/paciente/nuevo'
     | '/paciente/$id/chequeo'
     | '/paciente/$id/reporte'
+    | '/paciente/$id'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/auth'
     | '/_app/app'
-    | '/_app/paciente/$id'
     | '/_app/paciente/nuevo'
     | '/_app/paciente/$id/chequeo'
     | '/_app/paciente/$id/reporte'
+    | '/_app/paciente/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -161,54 +161,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPacienteNuevoRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/paciente/$id': {
-      id: '/_app/paciente/$id'
+    '/_app/paciente/$id/': {
+      id: '/_app/paciente/$id/'
       path: '/paciente/$id'
-      fullPath: '/paciente/$id'
-      preLoaderRoute: typeof AppPacienteIdRouteImport
+      fullPath: '/paciente/$id/'
+      preLoaderRoute: typeof AppPacienteIdIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/paciente/$id/reporte': {
       id: '/_app/paciente/$id/reporte'
-      path: '/reporte'
+      path: '/paciente/$id/reporte'
       fullPath: '/paciente/$id/reporte'
       preLoaderRoute: typeof AppPacienteIdReporteRouteImport
-      parentRoute: typeof AppPacienteIdRoute
+      parentRoute: typeof AppRoute
     }
     '/_app/paciente/$id/chequeo': {
       id: '/_app/paciente/$id/chequeo'
-      path: '/chequeo'
+      path: '/paciente/$id/chequeo'
       fullPath: '/paciente/$id/chequeo'
       preLoaderRoute: typeof AppPacienteIdChequeoRouteImport
-      parentRoute: typeof AppPacienteIdRoute
+      parentRoute: typeof AppRoute
     }
   }
 }
 
-interface AppPacienteIdRouteChildren {
-  AppPacienteIdChequeoRoute: typeof AppPacienteIdChequeoRoute
-  AppPacienteIdReporteRoute: typeof AppPacienteIdReporteRoute
-}
-
-const AppPacienteIdRouteChildren: AppPacienteIdRouteChildren = {
-  AppPacienteIdChequeoRoute: AppPacienteIdChequeoRoute,
-  AppPacienteIdReporteRoute: AppPacienteIdReporteRoute,
-}
-
-const AppPacienteIdRouteWithChildren = AppPacienteIdRoute._addFileChildren(
-  AppPacienteIdRouteChildren,
-)
-
 interface AppRouteChildren {
   AppAppRoute: typeof AppAppRoute
-  AppPacienteIdRoute: typeof AppPacienteIdRouteWithChildren
   AppPacienteNuevoRoute: typeof AppPacienteNuevoRoute
+  AppPacienteIdChequeoRoute: typeof AppPacienteIdChequeoRoute
+  AppPacienteIdReporteRoute: typeof AppPacienteIdReporteRoute
+  AppPacienteIdIndexRoute: typeof AppPacienteIdIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAppRoute: AppAppRoute,
-  AppPacienteIdRoute: AppPacienteIdRouteWithChildren,
   AppPacienteNuevoRoute: AppPacienteNuevoRoute,
+  AppPacienteIdChequeoRoute: AppPacienteIdChequeoRoute,
+  AppPacienteIdReporteRoute: AppPacienteIdReporteRoute,
+  AppPacienteIdIndexRoute: AppPacienteIdIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
