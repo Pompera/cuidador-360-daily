@@ -18,8 +18,8 @@ interface Patient {
 
 interface UltimoChequeo {
   patient_id: string;
-  ieg: number;
-  color: string;
+  ieg: number | null;
+  color: string | null;
   fecha: string;
 }
 
@@ -116,7 +116,7 @@ function HomePage() {
                             <AlertCircle className="size-3.5" /> Valoración pendiente
                           </span>
                         ) : u ? (
-                          <span className={`inline-flex items-center text-sm font-semibold px-2.5 py-1 rounded-full mt-1 ${colorBg[u.color] ?? "bg-secondary"}`}>
+                          <span className={`inline-flex items-center text-sm font-semibold px-2.5 py-1 rounded-full mt-1 ${u.color ? (colorBg[u.color] ?? "bg-secondary") : "bg-secondary"}`}>
                             IEG {u.ieg} · {u.fecha}
                           </span>
                         ) : (
