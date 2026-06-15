@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_app/paciente/$id")({
+export const Route = createFileRoute("/_app/paciente/$id/")({
   component: PatientHub,
 });
 
