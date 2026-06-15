@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, LogOut, ChevronRight, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_app/")({
+export const Route = createFileRoute("/_app/app")({
   component: HomePage,
 });
 
