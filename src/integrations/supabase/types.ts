@@ -14,7 +14,152 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chequeos_diarios: {
+        Row: {
+          color: string | null
+          created_at: string
+          fecha: string
+          id: string
+          ieg: number | null
+          owner_id: string
+          patient_id: string
+          respuestas: Json
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          fecha?: string
+          id?: string
+          ieg?: number | null
+          owner_id: string
+          patient_id: string
+          respuestas?: Json
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          fecha?: string
+          id?: string
+          ieg?: number | null
+          owner_id?: string
+          patient_id?: string
+          respuestas?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chequeos_diarios_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          barthel_total: number | null
+          caidas_12m: boolean | null
+          cfs_nivel: number | null
+          cognicion_basal: Json | null
+          comorbilidades: Json | null
+          created_at: string
+          edad: number | null
+          escolaridad: string | null
+          horas_acompanado: number | null
+          id: string
+          lawton_total: number | null
+          miedo_caer: boolean | null
+          movilidad: string | null
+          nombre: string
+          objetivos: Json | null
+          owner_id: string
+          peso: number | null
+          sexo: string | null
+          sueno_despertares: number | null
+          sueno_hipnoticos: boolean | null
+          sueno_horas: number | null
+          talla: number | null
+          tipo_cuidador: string | null
+          updated_at: string
+          valoracion_completa: boolean
+          vive_solo: boolean | null
+        }
+        Insert: {
+          barthel_total?: number | null
+          caidas_12m?: boolean | null
+          cfs_nivel?: number | null
+          cognicion_basal?: Json | null
+          comorbilidades?: Json | null
+          created_at?: string
+          edad?: number | null
+          escolaridad?: string | null
+          horas_acompanado?: number | null
+          id?: string
+          lawton_total?: number | null
+          miedo_caer?: boolean | null
+          movilidad?: string | null
+          nombre: string
+          objetivos?: Json | null
+          owner_id: string
+          peso?: number | null
+          sexo?: string | null
+          sueno_despertares?: number | null
+          sueno_hipnoticos?: boolean | null
+          sueno_horas?: number | null
+          talla?: number | null
+          tipo_cuidador?: string | null
+          updated_at?: string
+          valoracion_completa?: boolean
+          vive_solo?: boolean | null
+        }
+        Update: {
+          barthel_total?: number | null
+          caidas_12m?: boolean | null
+          cfs_nivel?: number | null
+          cognicion_basal?: Json | null
+          comorbilidades?: Json | null
+          created_at?: string
+          edad?: number | null
+          escolaridad?: string | null
+          horas_acompanado?: number | null
+          id?: string
+          lawton_total?: number | null
+          miedo_caer?: boolean | null
+          movilidad?: string | null
+          nombre?: string
+          objetivos?: Json | null
+          owner_id?: string
+          peso?: number | null
+          sexo?: string | null
+          sueno_despertares?: number | null
+          sueno_hipnoticos?: boolean | null
+          sueno_horas?: number | null
+          talla?: number | null
+          tipo_cuidador?: string | null
+          updated_at?: string
+          valoracion_completa?: boolean
+          vive_solo?: boolean | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
