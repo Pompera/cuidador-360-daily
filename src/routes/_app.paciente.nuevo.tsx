@@ -82,7 +82,7 @@ function NuevoPaciente() {
   }
   function back() {
     if (idx > 0) setStep(STEPS[idx - 1].key);
-    else navigate({ to: "/_app" });
+    else navigate({ to: "/app" });
   }
 
   async function guardar() {
@@ -117,7 +117,7 @@ function NuevoPaciente() {
       }).select("id").single();
       if (error) throw error;
       toast.success("Adulto mayor registrado");
-      navigate({ to: "/_app/paciente/$id", params: { id: data.id } });
+      navigate({ to: "/paciente/$id", params: { id: data.id } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo guardar");
     } finally {

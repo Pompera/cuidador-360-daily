@@ -61,7 +61,7 @@ function PatientHub() {
     const { error } = await supabase.from("patients").delete().eq("id", id);
     if (error) { toast.error("No se pudo eliminar"); return; }
     toast.success("Eliminado");
-    navigate({ to: "/_app" });
+    navigate({ to: "/app" });
   }
 
   return (
@@ -100,13 +100,13 @@ function PatientHub() {
 
         {/* Acción principal */}
         <Button asChild size="xl" disabled={yaHoy} variant={yaHoy ? "outline" : "default"}>
-          <Link to="/_app/paciente/$id/chequeo" params={{ id }}>
+          <Link to="/paciente/$id/chequeo" params={{ id }}>
             <ClipboardCheck /> {yaHoy ? "Chequeo de hoy completado" : "Hacer chequeo de hoy"}
           </Link>
         </Button>
 
         <Button asChild size="xl" variant="outline">
-          <Link to="/_app/paciente/$id/reporte" params={{ id }}>
+          <Link to="/paciente/$id/reporte" params={{ id }}>
             <FileDown /> Generar reporte para el médico
           </Link>
         </Button>

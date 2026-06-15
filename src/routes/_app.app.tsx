@@ -89,7 +89,7 @@ function HomePage() {
           <div className="mt-6 rounded-3xl border-2 border-dashed border-border bg-card/50 p-8 text-center">
             <p className="text-muted-foreground">Aún no has agregado a nadie.</p>
             <Button asChild size="xl" className="mt-5">
-              <Link to="/_app/paciente/nuevo">
+              <Link to="/paciente/nuevo">
                 <Plus /> Agregar adulto mayor
               </Link>
             </Button>
@@ -102,7 +102,7 @@ function HomePage() {
                 return (
                   <li key={p.id}>
                     <Link
-                      to="/_app/paciente/$id"
+                      to="/paciente/$id"
                       params={{ id: p.id }}
                       className="flex items-center gap-4 rounded-3xl border border-border/60 bg-card p-5 shadow-[var(--shadow-soft)] active:scale-[0.99] transition"
                     >
@@ -131,7 +131,7 @@ function HomePage() {
             </ul>
             {patients.length < 3 && (
               <Button asChild size="xl" variant="outline" className="mt-6">
-                <Link to="/_app/paciente/nuevo"><Plus /> Agregar otro</Link>
+                <Link to="/paciente/nuevo"><Plus /> Agregar otro</Link>
               </Button>
             )}
             {patients.length >= 3 && (
