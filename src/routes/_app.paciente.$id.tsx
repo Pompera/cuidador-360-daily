@@ -67,7 +67,7 @@ function PatientHub() {
   return (
     <div className="min-h-screen bg-background">
       <header className="container-app pt-6 pb-4 flex items-center gap-3">
-        <Link to="/_app" className="size-11 rounded-2xl bg-secondary grid place-items-center" aria-label="Atrás">
+        <Link to="/app" className="size-11 rounded-2xl bg-secondary grid place-items-center" aria-label="Atrás">
           <ArrowLeft className="size-5" />
         </Link>
         <div className="flex-1">
