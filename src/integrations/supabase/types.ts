@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      caidas: {
+        Row: {
+          circunstancia: string | null
+          created_at: string
+          fecha: string
+          golpe_craneal: boolean
+          hospitalizacion: boolean
+          id: string
+          lesion: string | null
+          lugar: string | null
+          owner_id: string
+          patient_id: string
+        }
+        Insert: {
+          circunstancia?: string | null
+          created_at?: string
+          fecha?: string
+          golpe_craneal?: boolean
+          hospitalizacion?: boolean
+          id?: string
+          lesion?: string | null
+          lugar?: string | null
+          owner_id: string
+          patient_id: string
+        }
+        Update: {
+          circunstancia?: string | null
+          created_at?: string
+          fecha?: string
+          golpe_craneal?: boolean
+          hospitalizacion?: boolean
+          id?: string
+          lesion?: string | null
+          lugar?: string | null
+          owner_id?: string
+          patient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caidas_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chequeos_diarios: {
         Row: {
           color: string | null
@@ -48,6 +95,101 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "chequeos_diarios_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medicamento_tomas: {
+        Row: {
+          created_at: string
+          estado: string
+          fecha: string
+          id: string
+          medicamento_id: string
+          nota: string | null
+          owner_id: string
+          patient_id: string
+        }
+        Insert: {
+          created_at?: string
+          estado: string
+          fecha?: string
+          id?: string
+          medicamento_id: string
+          nota?: string | null
+          owner_id: string
+          patient_id: string
+        }
+        Update: {
+          created_at?: string
+          estado?: string
+          fecha?: string
+          id?: string
+          medicamento_id?: string
+          nota?: string | null
+          owner_id?: string
+          patient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicamento_tomas_medicamento_id_fkey"
+            columns: ["medicamento_id"]
+            isOneToOne: false
+            referencedRelation: "medicamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicamento_tomas_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medicamentos: {
+        Row: {
+          activo: boolean
+          created_at: string
+          dosis: string | null
+          fecha_inicio: string | null
+          frecuencia: string | null
+          id: string
+          nombre: string
+          owner_id: string
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          created_at?: string
+          dosis?: string | null
+          fecha_inicio?: string | null
+          frecuencia?: string | null
+          id?: string
+          nombre: string
+          owner_id: string
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          created_at?: string
+          dosis?: string | null
+          fecha_inicio?: string | null
+          frecuencia?: string | null
+          id?: string
+          nombre?: string
+          owner_id?: string
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicamentos_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
@@ -159,6 +301,56 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      signos_vitales: {
+        Row: {
+          created_at: string
+          fc: number | null
+          fecha: string
+          glucosa: number | null
+          id: string
+          owner_id: string
+          patient_id: string
+          saturacion: number | null
+          ta_diastolica: number | null
+          ta_sistolica: number | null
+          temperatura: number | null
+        }
+        Insert: {
+          created_at?: string
+          fc?: number | null
+          fecha?: string
+          glucosa?: number | null
+          id?: string
+          owner_id: string
+          patient_id: string
+          saturacion?: number | null
+          ta_diastolica?: number | null
+          ta_sistolica?: number | null
+          temperatura?: number | null
+        }
+        Update: {
+          created_at?: string
+          fc?: number | null
+          fecha?: string
+          glucosa?: number | null
+          id?: string
+          owner_id?: string
+          patient_id?: string
+          saturacion?: number | null
+          ta_diastolica?: number | null
+          ta_sistolica?: number | null
+          temperatura?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signos_vitales_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

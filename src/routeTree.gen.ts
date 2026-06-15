@@ -15,8 +15,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppAppRouteImport } from './routes/_app.app'
 import { Route as AppPacienteNuevoRouteImport } from './routes/_app.paciente.nuevo'
 import { Route as AppPacienteIdIndexRouteImport } from './routes/_app.paciente.$id.index'
+import { Route as AppPacienteIdSignosRouteImport } from './routes/_app.paciente.$id.signos'
 import { Route as AppPacienteIdReporteRouteImport } from './routes/_app.paciente.$id.reporte'
+import { Route as AppPacienteIdMedicamentosRouteImport } from './routes/_app.paciente.$id.medicamentos'
 import { Route as AppPacienteIdChequeoRouteImport } from './routes/_app.paciente.$id.chequeo'
+import { Route as AppPacienteIdCaidasRouteImport } from './routes/_app.paciente.$id.caidas'
+import { Route as AppPacienteIdBitacorasRouteImport } from './routes/_app.paciente.$id.bitacoras'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -47,14 +51,35 @@ const AppPacienteIdIndexRoute = AppPacienteIdIndexRouteImport.update({
   path: '/paciente/$id/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPacienteIdSignosRoute = AppPacienteIdSignosRouteImport.update({
+  id: '/paciente/$id/signos',
+  path: '/paciente/$id/signos',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPacienteIdReporteRoute = AppPacienteIdReporteRouteImport.update({
   id: '/paciente/$id/reporte',
   path: '/paciente/$id/reporte',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPacienteIdMedicamentosRoute =
+  AppPacienteIdMedicamentosRouteImport.update({
+    id: '/paciente/$id/medicamentos',
+    path: '/paciente/$id/medicamentos',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppPacienteIdChequeoRoute = AppPacienteIdChequeoRouteImport.update({
   id: '/paciente/$id/chequeo',
   path: '/paciente/$id/chequeo',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPacienteIdCaidasRoute = AppPacienteIdCaidasRouteImport.update({
+  id: '/paciente/$id/caidas',
+  path: '/paciente/$id/caidas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPacienteIdBitacorasRoute = AppPacienteIdBitacorasRouteImport.update({
+  id: '/paciente/$id/bitacoras',
+  path: '/paciente/$id/bitacoras',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -63,8 +88,12 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/app': typeof AppAppRoute
   '/paciente/nuevo': typeof AppPacienteNuevoRoute
+  '/paciente/$id/bitacoras': typeof AppPacienteIdBitacorasRoute
+  '/paciente/$id/caidas': typeof AppPacienteIdCaidasRoute
   '/paciente/$id/chequeo': typeof AppPacienteIdChequeoRoute
+  '/paciente/$id/medicamentos': typeof AppPacienteIdMedicamentosRoute
   '/paciente/$id/reporte': typeof AppPacienteIdReporteRoute
+  '/paciente/$id/signos': typeof AppPacienteIdSignosRoute
   '/paciente/$id/': typeof AppPacienteIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -72,8 +101,12 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/app': typeof AppAppRoute
   '/paciente/nuevo': typeof AppPacienteNuevoRoute
+  '/paciente/$id/bitacoras': typeof AppPacienteIdBitacorasRoute
+  '/paciente/$id/caidas': typeof AppPacienteIdCaidasRoute
   '/paciente/$id/chequeo': typeof AppPacienteIdChequeoRoute
+  '/paciente/$id/medicamentos': typeof AppPacienteIdMedicamentosRoute
   '/paciente/$id/reporte': typeof AppPacienteIdReporteRoute
+  '/paciente/$id/signos': typeof AppPacienteIdSignosRoute
   '/paciente/$id': typeof AppPacienteIdIndexRoute
 }
 export interface FileRoutesById {
@@ -83,8 +116,12 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_app/app': typeof AppAppRoute
   '/_app/paciente/nuevo': typeof AppPacienteNuevoRoute
+  '/_app/paciente/$id/bitacoras': typeof AppPacienteIdBitacorasRoute
+  '/_app/paciente/$id/caidas': typeof AppPacienteIdCaidasRoute
   '/_app/paciente/$id/chequeo': typeof AppPacienteIdChequeoRoute
+  '/_app/paciente/$id/medicamentos': typeof AppPacienteIdMedicamentosRoute
   '/_app/paciente/$id/reporte': typeof AppPacienteIdReporteRoute
+  '/_app/paciente/$id/signos': typeof AppPacienteIdSignosRoute
   '/_app/paciente/$id/': typeof AppPacienteIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -94,8 +131,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app'
     | '/paciente/nuevo'
+    | '/paciente/$id/bitacoras'
+    | '/paciente/$id/caidas'
     | '/paciente/$id/chequeo'
+    | '/paciente/$id/medicamentos'
     | '/paciente/$id/reporte'
+    | '/paciente/$id/signos'
     | '/paciente/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -103,8 +144,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/app'
     | '/paciente/nuevo'
+    | '/paciente/$id/bitacoras'
+    | '/paciente/$id/caidas'
     | '/paciente/$id/chequeo'
+    | '/paciente/$id/medicamentos'
     | '/paciente/$id/reporte'
+    | '/paciente/$id/signos'
     | '/paciente/$id'
   id:
     | '__root__'
@@ -113,8 +158,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_app/app'
     | '/_app/paciente/nuevo'
+    | '/_app/paciente/$id/bitacoras'
+    | '/_app/paciente/$id/caidas'
     | '/_app/paciente/$id/chequeo'
+    | '/_app/paciente/$id/medicamentos'
     | '/_app/paciente/$id/reporte'
+    | '/_app/paciente/$id/signos'
     | '/_app/paciente/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -168,11 +217,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPacienteIdIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/paciente/$id/signos': {
+      id: '/_app/paciente/$id/signos'
+      path: '/paciente/$id/signos'
+      fullPath: '/paciente/$id/signos'
+      preLoaderRoute: typeof AppPacienteIdSignosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/paciente/$id/reporte': {
       id: '/_app/paciente/$id/reporte'
       path: '/paciente/$id/reporte'
       fullPath: '/paciente/$id/reporte'
       preLoaderRoute: typeof AppPacienteIdReporteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/paciente/$id/medicamentos': {
+      id: '/_app/paciente/$id/medicamentos'
+      path: '/paciente/$id/medicamentos'
+      fullPath: '/paciente/$id/medicamentos'
+      preLoaderRoute: typeof AppPacienteIdMedicamentosRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/paciente/$id/chequeo': {
@@ -182,22 +245,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPacienteIdChequeoRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/paciente/$id/caidas': {
+      id: '/_app/paciente/$id/caidas'
+      path: '/paciente/$id/caidas'
+      fullPath: '/paciente/$id/caidas'
+      preLoaderRoute: typeof AppPacienteIdCaidasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/paciente/$id/bitacoras': {
+      id: '/_app/paciente/$id/bitacoras'
+      path: '/paciente/$id/bitacoras'
+      fullPath: '/paciente/$id/bitacoras'
+      preLoaderRoute: typeof AppPacienteIdBitacorasRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
   AppAppRoute: typeof AppAppRoute
   AppPacienteNuevoRoute: typeof AppPacienteNuevoRoute
+  AppPacienteIdBitacorasRoute: typeof AppPacienteIdBitacorasRoute
+  AppPacienteIdCaidasRoute: typeof AppPacienteIdCaidasRoute
   AppPacienteIdChequeoRoute: typeof AppPacienteIdChequeoRoute
+  AppPacienteIdMedicamentosRoute: typeof AppPacienteIdMedicamentosRoute
   AppPacienteIdReporteRoute: typeof AppPacienteIdReporteRoute
+  AppPacienteIdSignosRoute: typeof AppPacienteIdSignosRoute
   AppPacienteIdIndexRoute: typeof AppPacienteIdIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAppRoute: AppAppRoute,
   AppPacienteNuevoRoute: AppPacienteNuevoRoute,
+  AppPacienteIdBitacorasRoute: AppPacienteIdBitacorasRoute,
+  AppPacienteIdCaidasRoute: AppPacienteIdCaidasRoute,
   AppPacienteIdChequeoRoute: AppPacienteIdChequeoRoute,
+  AppPacienteIdMedicamentosRoute: AppPacienteIdMedicamentosRoute,
   AppPacienteIdReporteRoute: AppPacienteIdReporteRoute,
+  AppPacienteIdSignosRoute: AppPacienteIdSignosRoute,
   AppPacienteIdIndexRoute: AppPacienteIdIndexRoute,
 }
 
