@@ -18,8 +18,8 @@ interface Patient {
 
 interface UltimoChequeo {
   patient_id: string;
-  ieg: number;
-  color: string;
+  ieg: number | null;
+  color: string | null;
   fecha: string;
 }
 
