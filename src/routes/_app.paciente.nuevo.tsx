@@ -211,6 +211,62 @@ function NuevoPaciente() {
           </div>
         )}
 
+        {step === "jenkins" && (
+          <div className="space-y-5">
+            <p className="text-muted-foreground">En el último mes, frecuencia de cada situación.</p>
+            {JENKINS_ITEMS.map((it) => (
+              <div key={it.key}>
+                <p className="font-semibold mb-2">{it.label}</p>
+                <div className="space-y-2">
+                  {JENKINS_OPTIONS.map((op) => (
+                    <ChoiceRow
+                      key={op.value}
+                      selected={jenkins[it.key] === op.value}
+                      onClick={() => setJenkins({ ...jenkins, [it.key]: op.value })}
+                      label={op.label}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+            {jenkinsDone && (
+              <div className="rounded-2xl bg-secondary p-4">
+                <p className="font-display text-lg">Total: <b>{jenkinsTotal}/20</b></p>
+                <p className="text-muted-foreground">{interpretJenkins(jenkinsTotal)}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {step === "zarit" && (
+          <div className="space-y-5">
+            <p className="text-muted-foreground">Cómo se ha sentido el cuidador principal el último mes.</p>
+            {ZARIT_ITEMS.map((it) => (
+              <div key={it.key}>
+                <p className="font-semibold mb-2">{it.label}</p>
+                <div className="space-y-2">
+                  {ZARIT_OPTIONS.map((op) => (
+                    <ChoiceRow
+                      key={op.value}
+                      selected={zarit[it.key] === op.value}
+                      onClick={() => setZarit({ ...zarit, [it.key]: op.value })}
+                      label={op.label}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+            {zaritDone && (
+              <div className="rounded-2xl bg-secondary p-4">
+                <p className="font-display text-lg">Total: <b>{zaritTotal}/28</b></p>
+                <p className="text-muted-foreground">{interpretZarit(zaritTotal)}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+
+
         {step === "objetivos" && (
           <MultiChips
             label="Elige hasta 2"
@@ -302,7 +358,7 @@ function NuevoPaciente() {
             {saving ? "Guardando…" : "Guardar y comenzar"}
           </Button>
         ) : (
-          <Button size="xl" onClick={next} disabled={!canAdvance(step, { nombre, edad, sexo, viveSolo, tipoCuidador, horas, movilidad, caidas, miedoCaer, reconoce, orienta, coherente, sHoras, sDesp, sHipn, objetivos, barthelDone, lawtonDone, cfs })}>
+          <Button size="xl" onClick={next} disabled={!canAdvance(step, { nombre, edad, sexo, viveSolo, tipoCuidador, horas, movilidad, caidas, miedoCaer, reconoce, orienta, coherente, sHoras, sDesp, sHipn, objetivos, barthelDone, lawtonDone, cfs, jenkinsDone, zaritDone })}>
             {idx === STEPS.length - 1 ? "Terminar" : "Continuar"} <ArrowRight />
           </Button>
         )}
@@ -323,6 +379,8 @@ function canAdvance(step: Step, s: any): boolean {
     case "barthel": return s.barthelDone;
     case "lawton": return s.lawtonDone;
     case "cfs": return s.cfs != null;
+    case "jenkins": return s.jenkinsDone;
+    case "zarit": return s.zaritDone;
     default: return true;
   }
 }
