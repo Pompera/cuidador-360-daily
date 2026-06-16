@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ClipboardCheck, FileDown, TrendingUp, AlertCircle, BookOpen } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, FileDown, TrendingUp, AlertCircle, BookOpen, ListChecks } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -108,6 +108,12 @@ function PatientHub() {
         <Button asChild size="xl" variant="outline">
           <Link to="/paciente/$id/bitacoras" params={{ id }}>
             <BookOpen /> Bitácoras
+          </Link>
+        </Button>
+
+        <Button asChild size="xl" variant="outline">
+          <Link to="/paciente/$id/escalas" params={{ id }}>
+            <ListChecks /> Escalas mensuales
           </Link>
         </Button>
 

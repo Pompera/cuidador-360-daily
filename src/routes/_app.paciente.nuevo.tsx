@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { BARTHEL_ITEMS, interpretBarthel } from "@/lib/clinical/barthel";
 import { LAWTON_ITEMS, interpretLawton } from "@/lib/clinical/lawton";
 import { CFS_LEVELS } from "@/lib/clinical/cfs";
+import { JENKINS_ITEMS, JENKINS_OPTIONS, interpretJenkins } from "@/lib/clinical/jenkins";
+import { ZARIT_ITEMS, ZARIT_OPTIONS, interpretZarit } from "@/lib/clinical/zarit";
 import { COMORBILIDADES, OBJETIVOS, MOVILIDAD, TIPO_CUIDADOR, SEXO } from "@/lib/clinical/constants";
 
 export const Route = createFileRoute("/_app/paciente/nuevo")({
@@ -16,16 +18,18 @@ export const Route = createFileRoute("/_app/paciente/nuevo")({
 });
 
 type Step =
-  | "datos" | "apoyo" | "comorb" | "movilidad" | "cognicion"
-  | "sueno" | "objetivos" | "barthel" | "lawton" | "cfs" | "listo";
+  | "datos" | "apoyo" | "zarit" | "comorb" | "movilidad" | "cognicion"
+  | "sueno" | "jenkins" | "objetivos" | "barthel" | "lawton" | "cfs" | "listo";
 
 const STEPS: { key: Step; label: string }[] = [
   { key: "datos", label: "Datos generales" },
   { key: "apoyo", label: "Red de apoyo" },
+  { key: "zarit", label: "Sobrecarga del cuidador (basal)" },
   { key: "comorb", label: "Comorbilidades" },
   { key: "movilidad", label: "Movilidad" },
   { key: "cognicion", label: "Cognición basal" },
   { key: "sueno", label: "Sueño basal" },
+  { key: "jenkins", label: "Escala de sueño Jenkins (basal)" },
   { key: "objetivos", label: "Objetivos" },
   { key: "barthel", label: "Barthel" },
   { key: "lawton", label: "Lawton y Brody" },
@@ -69,11 +73,17 @@ function NuevoPaciente() {
   const [barthel, setBarthel] = useState<Record<string, number>>({});
   const [lawton, setLawton] = useState<Record<string, number>>({});
   const [cfs, setCfs] = useState<number | null>(null);
+  const [jenkins, setJenkins] = useState<Record<string, number>>({});
+  const [zarit, setZarit] = useState<Record<string, number>>({});
 
   const barthelTotal = Object.values(barthel).reduce((s, v) => s + v, 0);
   const lawtonTotal = Object.values(lawton).reduce((s, v) => s + v, 0);
   const barthelDone = Object.keys(barthel).length === BARTHEL_ITEMS.length;
   const lawtonDone = Object.keys(lawton).length === LAWTON_ITEMS.length;
+  const jenkinsTotal = Object.values(jenkins).reduce((s, v) => s + v, 0);
+  const zaritTotal = Object.values(zarit).reduce((s, v) => s + v, 0);
+  const jenkinsDone = Object.keys(jenkins).length === JENKINS_ITEMS.length;
+  const zaritDone = Object.keys(zarit).length === ZARIT_ITEMS.length;
 
   function next() {
     const nextStep = STEPS[idx + 1];
@@ -113,6 +123,8 @@ function NuevoPaciente() {
         barthel_total: barthelDone ? barthelTotal : null,
         lawton_total: lawtonDone ? lawtonTotal : null,
         cfs_nivel: cfs,
+        jenkins_basal: jenkinsDone ? jenkinsTotal : null,
+        zarit_basal: zaritDone ? zaritTotal : null,
         valoracion_completa: true,
       }).select("id").single();
       if (error) throw error;
@@ -198,6 +210,62 @@ function NuevoPaciente() {
             <YesNo label="¿Usa hipnóticos para dormir?" value={sHipn} onChange={setSHipn} />
           </div>
         )}
+
+        {step === "jenkins" && (
+          <div className="space-y-5">
+            <p className="text-muted-foreground">En el último mes, frecuencia de cada situación.</p>
+            {JENKINS_ITEMS.map((it) => (
+              <div key={it.key}>
+                <p className="font-semibold mb-2">{it.label}</p>
+                <div className="space-y-2">
+                  {JENKINS_OPTIONS.map((op) => (
+                    <ChoiceRow
+                      key={op.value}
+                      selected={jenkins[it.key] === op.value}
+                      onClick={() => setJenkins({ ...jenkins, [it.key]: op.value })}
+                      label={op.label}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+            {jenkinsDone && (
+              <div className="rounded-2xl bg-secondary p-4">
+                <p className="font-display text-lg">Total: <b>{jenkinsTotal}/20</b></p>
+                <p className="text-muted-foreground">{interpretJenkins(jenkinsTotal)}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {step === "zarit" && (
+          <div className="space-y-5">
+            <p className="text-muted-foreground">Cómo se ha sentido el cuidador principal el último mes.</p>
+            {ZARIT_ITEMS.map((it) => (
+              <div key={it.key}>
+                <p className="font-semibold mb-2">{it.label}</p>
+                <div className="space-y-2">
+                  {ZARIT_OPTIONS.map((op) => (
+                    <ChoiceRow
+                      key={op.value}
+                      selected={zarit[it.key] === op.value}
+                      onClick={() => setZarit({ ...zarit, [it.key]: op.value })}
+                      label={op.label}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+            {zaritDone && (
+              <div className="rounded-2xl bg-secondary p-4">
+                <p className="font-display text-lg">Total: <b>{zaritTotal}/28</b></p>
+                <p className="text-muted-foreground">{interpretZarit(zaritTotal)}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+
 
         {step === "objetivos" && (
           <MultiChips
@@ -290,7 +358,7 @@ function NuevoPaciente() {
             {saving ? "Guardando…" : "Guardar y comenzar"}
           </Button>
         ) : (
-          <Button size="xl" onClick={next} disabled={!canAdvance(step, { nombre, edad, sexo, viveSolo, tipoCuidador, horas, movilidad, caidas, miedoCaer, reconoce, orienta, coherente, sHoras, sDesp, sHipn, objetivos, barthelDone, lawtonDone, cfs })}>
+          <Button size="xl" onClick={next} disabled={!canAdvance(step, { nombre, edad, sexo, viveSolo, tipoCuidador, horas, movilidad, caidas, miedoCaer, reconoce, orienta, coherente, sHoras, sDesp, sHipn, objetivos, barthelDone, lawtonDone, cfs, jenkinsDone, zaritDone })}>
             {idx === STEPS.length - 1 ? "Terminar" : "Continuar"} <ArrowRight />
           </Button>
         )}
@@ -311,6 +379,8 @@ function canAdvance(step: Step, s: any): boolean {
     case "barthel": return s.barthelDone;
     case "lawton": return s.lawtonDone;
     case "cfs": return s.cfs != null;
+    case "jenkins": return s.jenkinsDone;
+    case "zarit": return s.zaritDone;
     default: return true;
   }
 }
