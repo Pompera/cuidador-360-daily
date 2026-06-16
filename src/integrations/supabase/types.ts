@@ -102,6 +102,50 @@ export type Database = {
           },
         ]
       }
+      evaluaciones_escala: {
+        Row: {
+          created_at: string
+          fecha: string
+          id: string
+          owner_id: string
+          patient_id: string
+          puntaje: number
+          respuestas: Json
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fecha?: string
+          id?: string
+          owner_id: string
+          patient_id: string
+          puntaje: number
+          respuestas?: Json
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fecha?: string
+          id?: string
+          owner_id?: string
+          patient_id?: string
+          puntaje?: number
+          respuestas?: Json
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluaciones_escala_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medicamento_tomas: {
         Row: {
           created_at: string
@@ -209,6 +253,7 @@ export type Database = {
           escolaridad: string | null
           horas_acompanado: number | null
           id: string
+          jenkins_basal: number | null
           lawton_total: number | null
           miedo_caer: boolean | null
           movilidad: string | null
@@ -225,6 +270,7 @@ export type Database = {
           updated_at: string
           valoracion_completa: boolean
           vive_solo: boolean | null
+          zarit_basal: number | null
         }
         Insert: {
           barthel_total?: number | null
@@ -237,6 +283,7 @@ export type Database = {
           escolaridad?: string | null
           horas_acompanado?: number | null
           id?: string
+          jenkins_basal?: number | null
           lawton_total?: number | null
           miedo_caer?: boolean | null
           movilidad?: string | null
@@ -253,6 +300,7 @@ export type Database = {
           updated_at?: string
           valoracion_completa?: boolean
           vive_solo?: boolean | null
+          zarit_basal?: number | null
         }
         Update: {
           barthel_total?: number | null
@@ -265,6 +313,7 @@ export type Database = {
           escolaridad?: string | null
           horas_acompanado?: number | null
           id?: string
+          jenkins_basal?: number | null
           lawton_total?: number | null
           miedo_caer?: boolean | null
           movilidad?: string | null
@@ -281,6 +330,7 @@ export type Database = {
           updated_at?: string
           valoracion_completa?: boolean
           vive_solo?: boolean | null
+          zarit_basal?: number | null
         }
         Relationships: []
       }
