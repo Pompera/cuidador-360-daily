@@ -21,6 +21,9 @@ import { Route as AppPacienteIdMedicamentosRouteImport } from './routes/_app.pac
 import { Route as AppPacienteIdChequeoRouteImport } from './routes/_app.paciente.$id.chequeo'
 import { Route as AppPacienteIdCaidasRouteImport } from './routes/_app.paciente.$id.caidas'
 import { Route as AppPacienteIdBitacorasRouteImport } from './routes/_app.paciente.$id.bitacoras'
+import { Route as AppPacienteIdEscalasIndexRouteImport } from './routes/_app.paciente.$id.escalas.index'
+import { Route as AppPacienteIdEscalasZaritRouteImport } from './routes/_app.paciente.$id.escalas.zarit'
+import { Route as AppPacienteIdEscalasJenkinsRouteImport } from './routes/_app.paciente.$id.escalas.jenkins'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -82,6 +85,24 @@ const AppPacienteIdBitacorasRoute = AppPacienteIdBitacorasRouteImport.update({
   path: '/paciente/$id/bitacoras',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPacienteIdEscalasIndexRoute =
+  AppPacienteIdEscalasIndexRouteImport.update({
+    id: '/paciente/$id/escalas/',
+    path: '/paciente/$id/escalas/',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppPacienteIdEscalasZaritRoute =
+  AppPacienteIdEscalasZaritRouteImport.update({
+    id: '/paciente/$id/escalas/zarit',
+    path: '/paciente/$id/escalas/zarit',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppPacienteIdEscalasJenkinsRoute =
+  AppPacienteIdEscalasJenkinsRouteImport.update({
+    id: '/paciente/$id/escalas/jenkins',
+    path: '/paciente/$id/escalas/jenkins',
+    getParentRoute: () => AppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -95,6 +116,9 @@ export interface FileRoutesByFullPath {
   '/paciente/$id/reporte': typeof AppPacienteIdReporteRoute
   '/paciente/$id/signos': typeof AppPacienteIdSignosRoute
   '/paciente/$id/': typeof AppPacienteIdIndexRoute
+  '/paciente/$id/escalas/jenkins': typeof AppPacienteIdEscalasJenkinsRoute
+  '/paciente/$id/escalas/zarit': typeof AppPacienteIdEscalasZaritRoute
+  '/paciente/$id/escalas/': typeof AppPacienteIdEscalasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,6 +132,9 @@ export interface FileRoutesByTo {
   '/paciente/$id/reporte': typeof AppPacienteIdReporteRoute
   '/paciente/$id/signos': typeof AppPacienteIdSignosRoute
   '/paciente/$id': typeof AppPacienteIdIndexRoute
+  '/paciente/$id/escalas/jenkins': typeof AppPacienteIdEscalasJenkinsRoute
+  '/paciente/$id/escalas/zarit': typeof AppPacienteIdEscalasZaritRoute
+  '/paciente/$id/escalas': typeof AppPacienteIdEscalasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -123,6 +150,9 @@ export interface FileRoutesById {
   '/_app/paciente/$id/reporte': typeof AppPacienteIdReporteRoute
   '/_app/paciente/$id/signos': typeof AppPacienteIdSignosRoute
   '/_app/paciente/$id/': typeof AppPacienteIdIndexRoute
+  '/_app/paciente/$id/escalas/jenkins': typeof AppPacienteIdEscalasJenkinsRoute
+  '/_app/paciente/$id/escalas/zarit': typeof AppPacienteIdEscalasZaritRoute
+  '/_app/paciente/$id/escalas/': typeof AppPacienteIdEscalasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -138,6 +168,9 @@ export interface FileRouteTypes {
     | '/paciente/$id/reporte'
     | '/paciente/$id/signos'
     | '/paciente/$id/'
+    | '/paciente/$id/escalas/jenkins'
+    | '/paciente/$id/escalas/zarit'
+    | '/paciente/$id/escalas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -151,6 +184,9 @@ export interface FileRouteTypes {
     | '/paciente/$id/reporte'
     | '/paciente/$id/signos'
     | '/paciente/$id'
+    | '/paciente/$id/escalas/jenkins'
+    | '/paciente/$id/escalas/zarit'
+    | '/paciente/$id/escalas'
   id:
     | '__root__'
     | '/'
@@ -165,6 +201,9 @@ export interface FileRouteTypes {
     | '/_app/paciente/$id/reporte'
     | '/_app/paciente/$id/signos'
     | '/_app/paciente/$id/'
+    | '/_app/paciente/$id/escalas/jenkins'
+    | '/_app/paciente/$id/escalas/zarit'
+    | '/_app/paciente/$id/escalas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -259,6 +298,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPacienteIdBitacorasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/paciente/$id/escalas/': {
+      id: '/_app/paciente/$id/escalas/'
+      path: '/paciente/$id/escalas'
+      fullPath: '/paciente/$id/escalas/'
+      preLoaderRoute: typeof AppPacienteIdEscalasIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/paciente/$id/escalas/zarit': {
+      id: '/_app/paciente/$id/escalas/zarit'
+      path: '/paciente/$id/escalas/zarit'
+      fullPath: '/paciente/$id/escalas/zarit'
+      preLoaderRoute: typeof AppPacienteIdEscalasZaritRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/paciente/$id/escalas/jenkins': {
+      id: '/_app/paciente/$id/escalas/jenkins'
+      path: '/paciente/$id/escalas/jenkins'
+      fullPath: '/paciente/$id/escalas/jenkins'
+      preLoaderRoute: typeof AppPacienteIdEscalasJenkinsRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -272,6 +332,9 @@ interface AppRouteChildren {
   AppPacienteIdReporteRoute: typeof AppPacienteIdReporteRoute
   AppPacienteIdSignosRoute: typeof AppPacienteIdSignosRoute
   AppPacienteIdIndexRoute: typeof AppPacienteIdIndexRoute
+  AppPacienteIdEscalasJenkinsRoute: typeof AppPacienteIdEscalasJenkinsRoute
+  AppPacienteIdEscalasZaritRoute: typeof AppPacienteIdEscalasZaritRoute
+  AppPacienteIdEscalasIndexRoute: typeof AppPacienteIdEscalasIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -284,6 +347,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppPacienteIdReporteRoute: AppPacienteIdReporteRoute,
   AppPacienteIdSignosRoute: AppPacienteIdSignosRoute,
   AppPacienteIdIndexRoute: AppPacienteIdIndexRoute,
+  AppPacienteIdEscalasJenkinsRoute: AppPacienteIdEscalasJenkinsRoute,
+  AppPacienteIdEscalasZaritRoute: AppPacienteIdEscalasZaritRoute,
+  AppPacienteIdEscalasIndexRoute: AppPacienteIdEscalasIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
