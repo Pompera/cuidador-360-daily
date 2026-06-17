@@ -33,7 +33,7 @@ const STEPS: { key: Step; label: string }[] = [
   { key: "objetivos", label: "Objetivos" },
   { key: "barthel", label: "Barthel" },
   { key: "lawton", label: "Lawton y Brody" },
-  { key: "cfs", label: "Fragilidad (CFS)" },
+  { key: "cfs", label: "Fragilidad" },
 ];
 
 function NuevoPaciente() {
