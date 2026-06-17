@@ -283,7 +283,7 @@ export function generarReportePDF(
       const flags: string[] = [];
       if (c.golpe_craneal) flags.push("Golpe craneal");
       if (c.hospitalizacion) flags.push("Hospitalización");
-      if (flags.length) body(ctx, `   ⚠ ${flags.join(" · ")}`);
+      if (flags.length) body(ctx, `   ${flags.join(", ")}`);
       ctx.y += 4;
     }
   }
