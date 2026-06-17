@@ -141,7 +141,9 @@ function Signos() {
 function Field({ label, unit, value, onChange }: { label: string; unit: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <Label className="text-xs">{label} <span className="text-muted-foreground">({unit})</span></Label>
+      <Label className="text-xs">
+        {label} {unit && <span className="text-muted-foreground">({unit})</span>}
+      </Label>
       <Input inputMode="decimal" value={value} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
