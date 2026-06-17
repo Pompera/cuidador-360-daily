@@ -152,3 +152,41 @@ export const COLOR_HEX: Record<ResultadoChequeo["color"], string> = {
   naranja: "#e8843a",
   rojo: "#d04a3a",
 };
+
+export const AREA_LABEL: Record<string, string> = {
+  cognicion: "Cognición",
+  funcion: "Función",
+  nutricion: "Nutrición",
+  sintomas: "Síntomas",
+  seguridad: "Seguridad",
+  global: "Global",
+};
+
+/** Devuelve el puntaje 0-100 por área (100 = sin déficit) para un set de respuestas. */
+export function puntajePorArea(respuestas: Record<string, Respuesta | string[]>): Record<string, number> {
+  const porArea: Record<string, { suma: number; n: number }> = {};
+  for (const p of PREGUNTAS) {
+    const r = respuestas[p.key];
+    if (r === undefined) continue;
+    let pesoMax = 0;
+    if (p.tipo === "multi" && Array.isArray(r)) {
+      pesoMax = r.reduce((mx, v) => {
+        const op = p.opciones.find((o) => o.value === v);
+        return Math.max(mx, op?.peso ?? 0);
+      }, 0);
+    } else if (typeof r === "string") {
+      const op = p.opciones.find((o) => o.value === r);
+      pesoMax = op?.peso ?? 0;
+    }
+    if (!porArea[p.area]) porArea[p.area] = { suma: 0, n: 0 };
+    porArea[p.area].suma += pesoMax;
+    porArea[p.area].n += 1;
+  }
+  const out: Record<string, number> = {};
+  for (const area of Object.keys(PESOS_AREA)) {
+    const a = porArea[area];
+    if (!a || a.n === 0) continue;
+    out[area] = Math.round(100 - (a.suma / a.n) * 100);
+  }
+  return out;
+}
