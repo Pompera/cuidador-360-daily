@@ -4,7 +4,13 @@ import { ArrowLeft, FileDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { generarReportePDF, type ReporteChequeo, type ReportePaciente } from "@/lib/pdf";
+import {
+  generarReportePDF,
+  type ReporteChequeo,
+  type ReportePaciente,
+  type ReporteExtras,
+} from "@/lib/pdf";
+import type { Toma } from "@/lib/clinical/medicamentos";
 
 export const Route = createFileRoute("/_app/paciente/$id/reporte")({
   component: ReportePage,
@@ -14,6 +20,9 @@ function ReportePage() {
   const { id } = Route.useParams();
   const [p, setP] = useState<ReportePaciente | null>(null);
   const [chequeos, setChequeos] = useState<ReporteChequeo[]>([]);
+  const [extras, setExtras] = useState<ReporteExtras>({
+    medicamentos: [], tomas: [], signos: [], caidas: [], evaluaciones: [],
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,6 +39,8 @@ function ReportePage() {
           cfs_nivel: pat.cfs_nivel,
           movilidad: pat.movilidad,
           objetivos: (Array.isArray(pat.objetivos) ? pat.objetivos : []) as string[],
+          jenkins_basal: (pat as any).jenkins_basal ?? null,
+          zarit_basal: (pat as any).zarit_basal ?? null,
         });
       }
       const { data: c } = await supabase
@@ -41,6 +52,23 @@ function ReportePage() {
       setChequeos(((c ?? []) as any).map((r: any) => ({
         fecha: r.fecha, ieg: r.ieg, color: r.color, respuestas: r.respuestas ?? {},
       })));
+
+      const [{ data: meds }, { data: tomas }, { data: signos }, { data: caidas }, { data: evals }] = await Promise.all([
+        supabase.from("medicamentos").select("id, nombre, dosis, frecuencia, fecha_inicio").eq("patient_id", id).eq("activo", true).order("created_at"),
+        supabase.from("medicamento_tomas").select("medicamento_id, fecha, estado").eq("patient_id", id),
+        supabase.from("signos_vitales").select("fecha, ta_sistolica, ta_diastolica, fc, temperatura, saturacion, glucosa").eq("patient_id", id).order("fecha", { ascending: false }).limit(30),
+        supabase.from("caidas").select("fecha, lugar, circunstancia, lesion, golpe_craneal, hospitalizacion").eq("patient_id", id).order("fecha", { ascending: false }),
+        supabase.from("evaluaciones_escala").select("tipo, fecha, puntaje").eq("patient_id", id).order("fecha", { ascending: false }),
+      ]);
+
+      setExtras({
+        medicamentos: (meds ?? []) as any,
+        tomas: (tomas ?? []) as Toma[],
+        signos: (signos ?? []) as any,
+        caidas: (caidas ?? []) as any,
+        evaluaciones: (evals ?? []) as any,
+      });
+
       setLoading(false);
     })();
   }, [id]);
@@ -48,7 +76,7 @@ function ReportePage() {
   function descargar() {
     if (!p) return;
     try {
-      const doc = generarReportePDF(p, chequeos);
+      const doc = generarReportePDF(p, chequeos, extras);
       const nombre = p.nombre.replace(/\s+/g, "_");
       doc.save(`Cuidador360_${nombre}_${new Date().toISOString().slice(0, 10)}.pdf`);
       toast.success("PDF descargado");
@@ -57,6 +85,7 @@ function ReportePage() {
       toast.error("No se pudo generar el PDF");
     }
   }
+
 
   if (loading) return <div className="container-app pt-12 text-muted-foreground">Preparando…</div>;
   if (!p) return <div className="container-app pt-12">Paciente no encontrado.</div>;
