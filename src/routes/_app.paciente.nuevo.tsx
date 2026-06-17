@@ -29,7 +29,7 @@ const STEPS: { key: Step; label: string }[] = [
   { key: "movilidad", label: "Movilidad" },
   { key: "cognicion", label: "Cognición basal" },
   { key: "sueno", label: "Calidad del sueño" },
-  { key: "jenkins", label: "Escala de sueño Jenkins (basal)" },
+  { key: "jenkins", label: "Calidad del sueño" },
   { key: "objetivos", label: "Objetivos" },
   { key: "barthel", label: "Barthel" },
   { key: "lawton", label: "Lawton y Brody" },
