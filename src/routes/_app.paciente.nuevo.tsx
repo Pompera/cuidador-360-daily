@@ -25,7 +25,7 @@ const STEPS: { key: Step; label: string }[] = [
   { key: "datos", label: "Datos generales" },
   { key: "apoyo", label: "Red de apoyo" },
   { key: "zarit", label: "Sobrecarga del cuidador" },
-  { key: "comorb", label: "Comorbilidades" },
+  { key: "comorb", label: "Comorbilidades del Paciente" },
   { key: "movilidad", label: "Movilidad" },
   { key: "cognicion", label: "Cognición basal" },
   { key: "sueno", label: "Calidad del sueño" },
