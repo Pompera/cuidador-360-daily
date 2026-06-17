@@ -28,12 +28,12 @@ export const BARTHEL_ITEMS: BarthelItem[] = [
     { value: 5, label: "Necesita ayuda parcial" },
     { value: 0, label: "Dependiente" },
   ]},
-  { key: "intestinal", label: "Control intestinal", options: [
+  { key: "intestinal", label: "Incontinencia fecal (\"Que le gane\")", options: [
     { value: 10, label: "Continente" },
     { value: 5, label: "Accidente ocasional" },
     { value: 0, label: "Incontinente" },
   ]},
-  { key: "vesical", label: "Control vesical", options: [
+  { key: "vesical", label: "Incontinencia Urinaria", options: [
     { value: 10, label: "Continente" },
     { value: 5, label: "Accidente ocasional" },
     { value: 0, label: "Incontinente" },
@@ -43,7 +43,7 @@ export const BARTHEL_ITEMS: BarthelItem[] = [
     { value: 5, label: "Necesita ayuda" },
     { value: 0, label: "Dependiente" },
   ]},
-  { key: "transferencias", label: "Transferencias cama-sillón", options: [
+  { key: "transferencias", label: "Pasar de cama-sillón", options: [
     { value: 15, label: "Independiente" },
     { value: 10, label: "Mínima ayuda" },
     { value: 5, label: "Puede sentarse pero requiere ayuda" },
