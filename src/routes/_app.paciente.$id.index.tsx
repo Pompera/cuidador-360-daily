@@ -140,7 +140,7 @@ function PatientHub() {
           <dl className="space-y-2 text-base">
             <Row k="Barthel" v={p.barthel_total != null ? `${p.barthel_total}/100` : "—"} />
             <Row k="Lawton" v={p.lawton_total != null ? `${p.lawton_total}/8` : "—"} />
-            <Row k="Fragilidad (CFS)" v={p.cfs_nivel != null ? `${p.cfs_nivel}/9` : "—"} />
+            <Row k="Fragilidad" v={p.cfs_nivel != null ? `${p.cfs_nivel}/9` : "—"} />
             <Row k="Movilidad" v={p.movilidad ?? "—"} />
             {comorb.length > 0 && <Row k="Diagnósticos" v={comorb.join(", ")} />}
             {obj.length > 0 && <Row k="Objetivos" v={obj.join(", ")} />}
