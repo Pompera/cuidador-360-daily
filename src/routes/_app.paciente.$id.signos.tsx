@@ -90,7 +90,7 @@ function Signos() {
             <div className="grid grid-cols-2 gap-3">
               <Field label="TA sistólica" unit="mmHg" value={form.ta_sistolica} onChange={(v) => setForm({ ...form, ta_sistolica: v })} />
               <Field label="TA diastólica" unit="mmHg" value={form.ta_diastolica} onChange={(v) => setForm({ ...form, ta_diastolica: v })} />
-              <Field label="FC" unit="lpm" value={form.fc} onChange={(v) => setForm({ ...form, fc: v })} />
+              <Field label="Frecuencia Cardiaca" unit="lpm" value={form.fc} onChange={(v) => setForm({ ...form, fc: v })} />
               <Field label="Temperatura" unit="°C" value={form.temperatura} onChange={(v) => setForm({ ...form, temperatura: v })} />
               <Field label="Saturación" unit="%" value={form.saturacion} onChange={(v) => setForm({ ...form, saturacion: v })} />
               <Field label="Glucosa" unit="mg/dL" value={form.glucosa} onChange={(v) => setForm({ ...form, glucosa: v })} />
