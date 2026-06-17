@@ -73,7 +73,7 @@ function ZaritPage() {
         </Link>
         <div className="flex-1">
           <h1 className="font-display text-2xl font-semibold leading-tight">Sobrecarga del cuidador</h1>
-          <p className="text-muted-foreground">Zarit abreviada</p>
+          <p className="text-muted-foreground"></p>
         </div>
       </header>
 
