@@ -72,7 +72,7 @@ function JenkinsPage() {
           <ArrowLeft className="size-5" />
         </Link>
         <div className="flex-1">
-          <h1 className="font-display text-2xl font-semibold leading-tight">Escala de sueño</h1>
+          <h1 className="font-display text-2xl font-semibold leading-tight">Calidad del sueño</h1>
           <p className="text-muted-foreground">Jenkins · último mes</p>
         </div>
       </header>

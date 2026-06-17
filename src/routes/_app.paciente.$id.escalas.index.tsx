@@ -20,8 +20,8 @@ function EscalasHub() {
       </header>
 
       <main className="container-app pb-12 space-y-3">
-        <Card to="/paciente/$id/escalas/jenkins" id={id} icon={<Moon className="size-6" />} title="Escala de sueño (Jenkins)" desc="Aplicación mensual · 4 preguntas" />
-        <Card to="/paciente/$id/escalas/zarit" id={id} icon={<Users className="size-6" />} title="Sobrecarga del cuidador (Zarit abreviada)" desc="Aplicación mensual · 7 preguntas" />
+        <Card to="/paciente/$id/escalas/jenkins" id={id} icon={<Moon className="size-6" />} title="Calidad del sueño" desc="Aplicación mensual · 4 preguntas" />
+        <Card to="/paciente/$id/escalas/zarit" id={id} icon={<Users className="size-6" />} title="Sobrecarga del cuidador" desc="Aplicación mensual · 7 preguntas" />
       </main>
     </div>
   );
