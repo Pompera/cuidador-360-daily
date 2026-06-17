@@ -1,6 +1,6 @@
 export const COMORBILIDADES = [
   "Hipertensión", "Diabetes", "Cardiopatía", "Insuficiencia cardiaca",
-  "EPOC", "ERC", "Parkinson", "Demencia", "DCL", "EVC",
+  "EPOC", "ERC", "Parkinson", "Demencia", "Deterioro Cognitivo", "EVC",
   "Depresión", "Cáncer", "Otras",
 ];
 
