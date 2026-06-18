@@ -66,12 +66,20 @@ export interface ReporteEscala {
   puntaje: number;
 }
 
+export interface ReporteProfundizacion {
+  fecha: string;
+  dominio_principal: string | null;
+  nivel_deterioro: string | null;
+  resumen: string | null;
+}
+
 export interface ReporteExtras {
   medicamentos: ReporteMedicamento[];
   tomas: Toma[];
   signos: ReporteSignos[];
   caidas: ReporteCaida[];
   evaluaciones: ReporteEscala[];
+  profundizaciones?: ReporteProfundizacion[];
 }
 
 export function generarReportePDF(
