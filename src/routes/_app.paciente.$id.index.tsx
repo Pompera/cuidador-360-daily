@@ -118,6 +118,40 @@ function PatientHub() {
           )}
         </section>
 
+        {/* Profundización pendiente */}
+        {alertaDominios.length > 0 && yaHoy && !profHoy && (
+          <section className="rounded-3xl border-2 border-primary/40 bg-primary/5 p-5">
+            <div className="flex gap-3">
+              <Activity className="size-5 text-primary shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold">Profundización pendiente</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Cambios detectados en: {alertaDominios.map(labelDominio).join(", ")}.
+                </p>
+                <Button asChild size="lg" className="mt-3 w-full">
+                  <Link
+                    to="/paciente/$id/profundizacion"
+                    params={{ id }}
+                    search={{ dominios: alertaDominios.join(",") }}
+                  >
+                    Responder ahora
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Última profundización */}
+        {ultimaProf && (
+          <section className="rounded-3xl bg-card border border-border/60 p-5">
+            <p className="text-sm text-muted-foreground">Última profundización · {ultimaProf.fecha}</p>
+            <p className="font-display text-lg font-semibold capitalize mt-1">
+              {ultimaProf.dominio_principal ?? "—"} · deterioro {ultimaProf.nivel_deterioro ?? "—"}
+            </p>
+          </section>
+        )}
+
         {/* Acción principal */}
         <Button asChild size="xl" disabled={yaHoy} variant={yaHoy ? "outline" : "default"}>
           <Link to="/paciente/$id/chequeo" params={{ id }}>
