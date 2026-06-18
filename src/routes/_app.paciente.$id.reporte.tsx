@@ -21,7 +21,7 @@ function ReportePage() {
   const [p, setP] = useState<ReportePaciente | null>(null);
   const [chequeos, setChequeos] = useState<ReporteChequeo[]>([]);
   const [extras, setExtras] = useState<ReporteExtras>({
-    medicamentos: [], tomas: [], signos: [], caidas: [], evaluaciones: [],
+    medicamentos: [], tomas: [], signos: [], caidas: [], evaluaciones: [], profundizaciones: [],
   });
   const [loading, setLoading] = useState(true);
 
