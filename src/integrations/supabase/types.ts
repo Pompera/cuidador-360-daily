@@ -352,6 +352,66 @@ export type Database = {
         }
         Relationships: []
       }
+      profundizaciones_clinicas: {
+        Row: {
+          chequeo_id: string | null
+          created_at: string
+          dominio_principal: string | null
+          dominios: Json
+          fecha: string
+          id: string
+          nivel_deterioro: string | null
+          owner_id: string
+          patient_id: string
+          respuestas: Json
+          resumen: string | null
+          updated_at: string
+        }
+        Insert: {
+          chequeo_id?: string | null
+          created_at?: string
+          dominio_principal?: string | null
+          dominios?: Json
+          fecha?: string
+          id?: string
+          nivel_deterioro?: string | null
+          owner_id: string
+          patient_id: string
+          respuestas?: Json
+          resumen?: string | null
+          updated_at?: string
+        }
+        Update: {
+          chequeo_id?: string | null
+          created_at?: string
+          dominio_principal?: string | null
+          dominios?: Json
+          fecha?: string
+          id?: string
+          nivel_deterioro?: string | null
+          owner_id?: string
+          patient_id?: string
+          respuestas?: Json
+          resumen?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profundizaciones_clinicas_chequeo_id_fkey"
+            columns: ["chequeo_id"]
+            isOneToOne: false
+            referencedRelation: "chequeos_diarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profundizaciones_clinicas_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signos_vitales: {
         Row: {
           created_at: string
