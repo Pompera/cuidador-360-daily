@@ -31,6 +31,9 @@ function PatientHub() {
   const navigate = useNavigate();
   const [p, setP] = useState<Patient | null>(null);
   const [chequeos, setChequeos] = useState<Chequeo[]>([]);
+  const [alertaDominios, setAlertaDominios] = useState<Dominio[]>([]);
+  const [ultimaProf, setUltimaProf] = useState<Profundizacion | null>(null);
+  const [profHoy, setProfHoy] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,11 +42,26 @@ function PatientHub() {
       setP(pat as Patient | null);
       const { data: c } = await supabase
         .from("chequeos_diarios")
-        .select("id, fecha, ieg, color")
+        .select("id, fecha, ieg, color, respuestas")
         .eq("patient_id", id)
         .order("fecha", { ascending: false })
         .limit(30);
-      setChequeos((c ?? []) as Chequeo[]);
+      const chs = (c ?? []) as Chequeo[];
+      setChequeos(chs);
+      const det = detectarAlertas(
+        chs.slice(0, 7).map((x) => ({ fecha: x.fecha, respuestas: (x.respuestas ?? {}) as Record<string, string | string[]> })),
+      );
+      setAlertaDominios(det.dominios);
+      const { data: profs } = await supabase
+        .from("profundizaciones_clinicas")
+        .select("fecha, dominio_principal, nivel_deterioro")
+        .eq("patient_id", id)
+        .order("fecha", { ascending: false })
+        .limit(1);
+      const last = (profs ?? [])[0] as Profundizacion | undefined;
+      setUltimaProf(last ?? null);
+      const hoy = new Date().toISOString().slice(0, 10);
+      setProfHoy(!!last && last.fecha === hoy);
       setLoading(false);
     })();
   }, [id]);
