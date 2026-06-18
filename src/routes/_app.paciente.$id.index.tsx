@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ClipboardCheck, FileDown, TrendingUp, AlertCircle, BookOpen, ListChecks } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, FileDown, TrendingUp, AlertCircle, BookOpen, ListChecks, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { detectarAlertas, labelDominio, type Dominio } from "@/lib/clinical/alertas";
 
 export const Route = createFileRoute("/_app/paciente/$id/")({
   component: PatientHub,
