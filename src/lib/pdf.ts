@@ -323,6 +323,22 @@ export function generarReportePDF(
   }
   ctx.y += 6;
 
+  // === CAMBIOS CLÍNICOS DETECTADOS (PROFUNDIZACIÓN) ===
+  const profs = extras.profundizaciones ?? [];
+  if (profs.length > 0) {
+    sectionTitle(ctx, "Cambios clínicos detectados");
+    for (const pr of profs.slice(0, 8)) {
+      ensureSpace(ctx, 40);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(30);
+      const cab = `• ${pr.fecha} — ${pr.dominio_principal ?? "—"} (deterioro ${pr.nivel_deterioro ?? "—"})`;
+      doc.text(cab, M, ctx.y); ctx.y += 14;
+      doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+      if (pr.resumen) wrap(ctx, `   ${pr.resumen}`);
+      ctx.y += 2;
+    }
+    ctx.y += 4;
+  }
+
   // Resumen
   sectionTitle(ctx, "Resumen clínico");
   const resumen = generarResumen(paciente, ultimos);
