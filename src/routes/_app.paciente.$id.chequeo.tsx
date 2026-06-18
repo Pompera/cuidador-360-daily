@@ -25,6 +25,7 @@ function ChequeoDiario() {
   const [respuestas, setRespuestas] = useState<Record<string, string | string[]>>({});
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState<null | ReturnType<typeof calcularIEG>>(null);
+  const [dominiosAlerta, setDominiosAlerta] = useState<string[]>([]);
 
   const p = PREGUNTAS[i];
   const total = PREGUNTAS.length;
