@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { PREGUNTAS, calcularIEG } from "@/lib/clinical/chequeo";
+import { detectarAlertas } from "@/lib/clinical/alertas";
 
 export const Route = createFileRoute("/_app/paciente/$id/chequeo")({
   component: ChequeoDiario,
