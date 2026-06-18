@@ -55,7 +55,7 @@ function ProfundizacionPage() {
       if (search.dominios) {
         doms = search.dominios
           .split(",")
-          .filter((d): d is Dominio => DOMINIOS_VALIDOS.includes(d as Dominio));
+          .filter((d: string): d is Dominio => DOMINIOS_VALIDOS.includes(d as Dominio));
       }
       const { data: hist } = await supabase
         .from("chequeos_diarios")
