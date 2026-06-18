@@ -118,7 +118,24 @@ function ChequeoDiario() {
               </ul>
             </div>
           )}
-          <Button asChild size="xl" className="mt-8">
+          {dominiosAlerta.length > 0 && (
+            <div className="mt-5 rounded-3xl border-2 border-primary/40 bg-primary/5 p-5 text-left">
+              <p className="font-semibold mb-1">Se detectaron cambios</p>
+              <p className="text-sm text-muted-foreground mb-3">
+                Te recomendamos responder unas preguntas rápidas para entender mejor lo que está pasando.
+              </p>
+              <Button asChild size="xl" className="w-full">
+                <Link
+                  to="/paciente/$id/profundizacion"
+                  params={{ id }}
+                  search={{ dominios: dominiosAlerta.join(",") }}
+                >
+                  Profundizar evaluación
+                </Link>
+              </Button>
+            </div>
+          )}
+          <Button asChild size="xl" variant={dominiosAlerta.length > 0 ? "outline" : "default"} className="mt-5">
             <Link to="/paciente/$id" params={{ id }}>Volver al perfil</Link>
           </Button>
         </main>
