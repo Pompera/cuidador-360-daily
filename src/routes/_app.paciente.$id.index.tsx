@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ClipboardCheck, FileDown, TrendingUp, AlertCircle, BookOpen, ListChecks } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, FileDown, TrendingUp, AlertCircle, BookOpen, ListChecks, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { detectarAlertas, labelDominio, type Dominio } from "@/lib/clinical/alertas";
 
 export const Route = createFileRoute("/_app/paciente/$id/")({
   component: PatientHub,
@@ -15,7 +16,8 @@ interface Patient {
   comorbilidades: unknown; objetivos: unknown; movilidad: string | null;
 }
 
-interface Chequeo { id: string; fecha: string; ieg: number; color: string }
+interface Chequeo { id: string; fecha: string; ieg: number; color: string; respuestas?: Record<string, string | string[]> }
+interface Profundizacion { fecha: string; dominio_principal: string | null; nivel_deterioro: string | null }
 
 const colorBg: Record<string, string> = {
   verde: "bg-[oklch(0.92_0.06_155)] text-[oklch(0.32_0.1_155)]",
@@ -29,6 +31,9 @@ function PatientHub() {
   const navigate = useNavigate();
   const [p, setP] = useState<Patient | null>(null);
   const [chequeos, setChequeos] = useState<Chequeo[]>([]);
+  const [alertaDominios, setAlertaDominios] = useState<Dominio[]>([]);
+  const [ultimaProf, setUltimaProf] = useState<Profundizacion | null>(null);
+  const [profHoy, setProfHoy] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,11 +42,26 @@ function PatientHub() {
       setP(pat as Patient | null);
       const { data: c } = await supabase
         .from("chequeos_diarios")
-        .select("id, fecha, ieg, color")
+        .select("id, fecha, ieg, color, respuestas")
         .eq("patient_id", id)
         .order("fecha", { ascending: false })
         .limit(30);
-      setChequeos((c ?? []) as Chequeo[]);
+      const chs = (c ?? []) as Chequeo[];
+      setChequeos(chs);
+      const det = detectarAlertas(
+        chs.slice(0, 7).map((x) => ({ fecha: x.fecha, respuestas: (x.respuestas ?? {}) as Record<string, string | string[]> })),
+      );
+      setAlertaDominios(det.dominios);
+      const { data: profs } = await supabase
+        .from("profundizaciones_clinicas")
+        .select("fecha, dominio_principal, nivel_deterioro")
+        .eq("patient_id", id)
+        .order("fecha", { ascending: false })
+        .limit(1);
+      const last = (profs ?? [])[0] as Profundizacion | undefined;
+      setUltimaProf(last ?? null);
+      const hoy = new Date().toISOString().slice(0, 10);
+      setProfHoy(!!last && last.fecha === hoy);
       setLoading(false);
     })();
   }, [id]);
@@ -97,6 +117,40 @@ function PatientHub() {
             </div>
           )}
         </section>
+
+        {/* Profundización pendiente */}
+        {alertaDominios.length > 0 && yaHoy && !profHoy && (
+          <section className="rounded-3xl border-2 border-primary/40 bg-primary/5 p-5">
+            <div className="flex gap-3">
+              <Activity className="size-5 text-primary shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold">Profundización pendiente</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Cambios detectados en: {alertaDominios.map(labelDominio).join(", ")}.
+                </p>
+                <Button asChild size="lg" className="mt-3 w-full">
+                  <Link
+                    to="/paciente/$id/profundizacion"
+                    params={{ id }}
+                    search={{ dominios: alertaDominios.join(",") }}
+                  >
+                    Responder ahora
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Última profundización */}
+        {ultimaProf && (
+          <section className="rounded-3xl bg-card border border-border/60 p-5">
+            <p className="text-sm text-muted-foreground">Última profundización · {ultimaProf.fecha}</p>
+            <p className="font-display text-lg font-semibold capitalize mt-1">
+              {ultimaProf.dominio_principal ?? "—"} · deterioro {ultimaProf.nivel_deterioro ?? "—"}
+            </p>
+          </section>
+        )}
 
         {/* Acción principal */}
         <Button asChild size="xl" disabled={yaHoy} variant={yaHoy ? "outline" : "default"}>

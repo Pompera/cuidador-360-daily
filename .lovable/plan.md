@@ -1,62 +1,76 @@
-# Plan: Bitácoras del paciente
+# Plan: Evaluación clínica en 2 capas
 
-Tres módulos independientes accesibles desde la ficha del paciente, cada uno con su propia ruta, tabla y flujo de registro.
+Sistema de filtro escalonado: el chequeo diario actual no cambia; cuando detecta alertas, se activa automáticamente un módulo de profundización dirigido al dominio afectado.
 
-## 1. Base de datos (una sola migración)
+## 1. Capa 1 — Detección de alertas (sin tocar el cuestionario)
 
-Tres tablas nuevas, todas con `owner_id` + RLS por `auth.uid()`, `patient_id` con FK a `patients`, índice por `(patient_id, fecha)`.
+Nuevo módulo `src/lib/clinical/alertas.ts` con función `detectarAlertas(historial)`:
+- Recibe los últimos chequeos diarios del paciente (ya guardados en `chequeos_diarios`).
+- Aplica las reglas pedidas:
+  - Cognición: "poco" confuso 2 días seguidos, o "mucho" un día.
+  - Función: "ayuda = sí", o "caminó menos" (poco/mucho).
+  - Nutrición: "comió menos" 2 días seguidos, "líquidos menos" 2 días seguidos.
+  - Seguridad: caída o casi caída.
+  - Síntomas: disnea, dolor importante o fiebre.
+- Devuelve `{ dominios: ["cognicion"|"funcion"|...], detalles: [...] }`.
 
-### `medicamentos`
-- `nombre` (text), `dosis` (text), `frecuencia` (text, ej. "cada 8 h"), `fecha_inicio` (date, opcional), `activo` (bool, default true).
+Se ejecuta automáticamente al guardar un chequeo (en `_app.paciente.$id.chequeo.tsx`, dentro de `finalizar`).
 
-### `medicamento_tomas` (registro de adherencia)
-- `medicamento_id` (FK), `patient_id`, `fecha` (date), `estado` ('tomado' | 'omitido'), `nota` opcional.
-- Único `(medicamento_id, fecha)` para que cada día se registre una vez.
+## 2. Capa 2 — Profundización automática
 
-### `signos_vitales`
-- `fecha` (timestamptz), `ta_sistolica`, `ta_diastolica`, `fc`, `temperatura`, `saturacion`, `glucosa` (todos nullable numeric).
+Nueva tabla `profundizaciones_clinicas`:
+- `id`, `patient_id`, `owner_id`, `fecha`, `chequeo_id` (FK opcional)
+- `dominios` (jsonb: array de dominios alertados)
+- `respuestas` (jsonb: respuestas de profundización)
+- `dominio_principal` (text), `nivel_deterioro` (text: leve/moderado/severo)
+- `resumen` (text, autogenerado para el PDF)
+- RLS por `owner_id`, GRANTs a `authenticated` y `service_role`.
 
-### `caidas`
-- `fecha` (date), `lugar` (text), `circunstancia` (text), `lesion` (text), `golpe_craneal` (bool), `hospitalizacion` (bool).
+Nueva ruta `_app.paciente.$id.profundizacion.tsx`:
+- Recibe los dominios alertados como search params.
+- Muestra solo las preguntas relevantes a esos dominios (las listadas en el requerimiento).
+- Al final calcula:
+  - **Dominio principal**: el que tiene más respuestas "rojas" (o el primero si empatan).
+  - **Nivel de deterioro**:
+    - Severo: cambio repentino + "no reconoce" / no camina post-caída / disnea en reposo / golpe craneal.
+    - Moderado: cambios "parciales" / progresivo con impacto / dolor continuo / esfuerzo.
+    - Leve: resto.
+  - **Resumen narrativo** tipo: *"Se detectaron cambios clínicos a expensas de cognición: cambios conductuales notados desde hace 2-3 días, con fluctuación del estado mental durante el día."*
 
-GRANTs a `authenticated` y `service_role`. Triggers `updated_at` donde aplica.
+## 3. Integración en el flujo existente
 
-## 2. Rutas nuevas
+**Al terminar chequeo** (`_app.paciente.$id.chequeo.tsx`):
+- Tras guardar, llamar `detectarAlertas` con los últimos N chequeos.
+- Si hay dominios alertados: en la pantalla de resultado mostrar un CTA destacado **"Profundizar evaluación (recomendado)"** que abre `/paciente/$id/profundizacion?dominios=...`.
+- Si no hay alertas: flujo igual al actual.
 
-```
-src/routes/_app.paciente.$id.bitacoras.index.tsx        -> hub con 3 tarjetas
-src/routes/_app.paciente.$id.medicamentos.tsx           -> lista + alta + registro toma + adherencia
-src/routes/_app.paciente.$id.signos.tsx                 -> alta + tendencia + alertas
-src/routes/_app.paciente.$id.caidas.tsx                 -> alta + lista cronológica
-```
+**En el perfil del paciente** (`_app.paciente.$id.index.tsx`):
+- Si hay alertas activas sin profundización del día → banner "Profundización pendiente".
+- Mostrar última profundización (dominio + nivel + fecha) si existe.
 
-Botón nuevo en `_app.paciente.$id.index.tsx`: "Bitácoras" → `/paciente/$id/bitacoras`.
+## 4. Actualización de IEG / ICB / semáforo
 
-## 3. Lógica clínica (`src/lib/clinical/`)
+- En `calcularIEG`, agregar un **modificador de profundización**: si existe profundización del mismo día, restar puntos según nivel (leve −5, moderado −10, severo −20). El color del semáforo se recalcula con el IEG ajustado.
+- El IEG guardado en `chequeos_diarios` se actualiza tras guardar la profundización (UPDATE al row del día).
 
-- `medicamentos.ts`: `calcularAdherencia(tomas, dias=7)` → % tomado vs total esperado.
-- `signos.ts`: `evaluarSignos({sistolica, diastolica, ...})` → array de alertas:
-  - TA sistólica > 180 o < 90 → alerta roja
-  - TA diastólica > 110 o < 60 → alerta roja
-  - TA sistólica > 140 o diastólica > 90 → vigilancia amarilla
-  - FC < 50 o > 110 → alerta
-  - Temp > 38 → alerta
-  - SatO2 < 92 → alerta roja
-  - Glucosa < 70 o > 250 → alerta
+## 5. PDF para el médico
 
-## 4. UX por módulo
+`src/lib/pdf.ts`:
+- Nueva sección **"Cambios clínicos detectados"** después del resumen, listando las profundizaciones recientes con su `resumen` narrativo, dominio y nivel.
+- `_app.paciente.$id.reporte.tsx` carga `profundizaciones_clinicas` del paciente y las pasa en `extras`.
 
-**Medicamentos**: lista de medicamentos activos; cada uno muestra nombre + dosis + frecuencia y dos botones grandes "Tomado" / "Omitido" para hoy (deshabilitados si ya se registró). Barra de adherencia 7 días. Botón "Agregar medicamento" abre formulario.
+## 6. Cambios técnicos puntuales
 
-**Signos vitales**: formulario con todos los campos opcionales (placeholder y unidades visibles). Al guardar, muestra alertas si aplica. Debajo, sparkline simple por parámetro con últimos 14 registros.
+- Migración: tabla + RLS + GRANTs + trigger `updated_at`.
+- `src/lib/clinical/alertas.ts` (reglas de detección).
+- `src/lib/clinical/profundizacion.ts` (preguntas, cálculo de dominio/nivel, generación de resumen).
+- Ruta nueva `_app.paciente.$id.profundizacion.tsx`.
+- Edits: `_app.paciente.$id.chequeo.tsx`, `_app.paciente.$id.index.tsx`, `_app.paciente.$id.reporte.tsx`, `src/lib/pdf.ts`, `src/lib/clinical/chequeo.ts` (modificador IEG).
 
-**Caídas**: formulario con fecha, lugar (texto libre), circunstancia (texto), lesión (texto), golpe craneal (sí/no), hospitalización (sí/no). Lista cronológica debajo con badges para golpe craneal / hospitalización.
+## Notas
 
-## 5. Notas técnicas
-
-- Consultas directas con `supabase` cliente (mismo patrón que `chequeo`/`reporte`).
-- Validación con `zod` en formularios.
-- Componentes UI de shadcn ya existentes (Button, Input, Label, Card).
-- Sin server functions nuevas: RLS protege todo.
+- El cuestionario diario **no se toca**.
+- La profundización es **opcional pero recomendada**: si el cuidador no la hace, el chequeo se guarda igual.
+- Todo dentro del patrón actual (supabase cliente directo, RLS).
 
 ¿Procedo con la migración y el código?

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { PREGUNTAS, calcularIEG } from "@/lib/clinical/chequeo";
+import { detectarAlertas } from "@/lib/clinical/alertas";
 
 export const Route = createFileRoute("/_app/paciente/$id/chequeo")({
   component: ChequeoDiario,
@@ -24,6 +25,7 @@ function ChequeoDiario() {
   const [respuestas, setRespuestas] = useState<Record<string, string | string[]>>({});
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState<null | ReturnType<typeof calcularIEG>>(null);
+  const [dominiosAlerta, setDominiosAlerta] = useState<string[]>([]);
 
   const p = PREGUNTAS[i];
   const total = PREGUNTAS.length;
@@ -71,6 +73,20 @@ function ChequeoDiario() {
         });
         if (e2) throw e2;
       }
+      // Detectar alertas con el chequeo de hoy + previos
+      const { data: prev } = await supabase
+        .from("chequeos_diarios")
+        .select("fecha, respuestas")
+        .eq("patient_id", id)
+        .neq("fecha", hoy)
+        .order("fecha", { ascending: false })
+        .limit(6);
+      const hist = [
+        { fecha: hoy, respuestas: currentResp as Record<string, string | string[]> },
+        ...((prev ?? []) as Array<{ fecha: string; respuestas: Record<string, string | string[]> }>),
+      ];
+      const det = detectarAlertas(hist);
+      setDominiosAlerta(det.dominios);
       setDone(resultado);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo guardar");
@@ -102,7 +118,24 @@ function ChequeoDiario() {
               </ul>
             </div>
           )}
-          <Button asChild size="xl" className="mt-8">
+          {dominiosAlerta.length > 0 && (
+            <div className="mt-5 rounded-3xl border-2 border-primary/40 bg-primary/5 p-5 text-left">
+              <p className="font-semibold mb-1">Se detectaron cambios</p>
+              <p className="text-sm text-muted-foreground mb-3">
+                Te recomendamos responder unas preguntas rápidas para entender mejor lo que está pasando.
+              </p>
+              <Button asChild size="xl" className="w-full">
+                <Link
+                  to="/paciente/$id/profundizacion"
+                  params={{ id }}
+                  search={{ dominios: dominiosAlerta.join(",") }}
+                >
+                  Profundizar evaluación
+                </Link>
+              </Button>
+            </div>
+          )}
+          <Button asChild size="xl" variant={dominiosAlerta.length > 0 ? "outline" : "default"} className="mt-5">
             <Link to="/paciente/$id" params={{ id }}>Volver al perfil</Link>
           </Button>
         </main>
