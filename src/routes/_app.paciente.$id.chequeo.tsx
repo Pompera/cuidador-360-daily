@@ -73,6 +73,20 @@ function ChequeoDiario() {
         });
         if (e2) throw e2;
       }
+      // Detectar alertas con el chequeo de hoy + previos
+      const { data: prev } = await supabase
+        .from("chequeos_diarios")
+        .select("fecha, respuestas")
+        .eq("patient_id", id)
+        .neq("fecha", hoy)
+        .order("fecha", { ascending: false })
+        .limit(6);
+      const hist = [
+        { fecha: hoy, respuestas: currentResp as Record<string, string | string[]> },
+        ...((prev ?? []) as Array<{ fecha: string; respuestas: Record<string, string | string[]> }>),
+      ];
+      const det = detectarAlertas(hist);
+      setDominiosAlerta(det.dominios);
       setDone(resultado);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo guardar");
