@@ -53,12 +53,13 @@ function ReportePage() {
         fecha: r.fecha, ieg: r.ieg, color: r.color, respuestas: r.respuestas ?? {},
       })));
 
-      const [{ data: meds }, { data: tomas }, { data: signos }, { data: caidas }, { data: evals }] = await Promise.all([
+      const [{ data: meds }, { data: tomas }, { data: signos }, { data: caidas }, { data: evals }, { data: profs }] = await Promise.all([
         supabase.from("medicamentos").select("id, nombre, dosis, frecuencia, fecha_inicio").eq("patient_id", id).eq("activo", true).order("created_at"),
         supabase.from("medicamento_tomas").select("medicamento_id, fecha, estado").eq("patient_id", id),
         supabase.from("signos_vitales").select("fecha, ta_sistolica, ta_diastolica, fc, temperatura, saturacion, glucosa").eq("patient_id", id).order("fecha", { ascending: false }).limit(30),
         supabase.from("caidas").select("fecha, lugar, circunstancia, lesion, golpe_craneal, hospitalizacion").eq("patient_id", id).order("fecha", { ascending: false }),
         supabase.from("evaluaciones_escala").select("tipo, fecha, puntaje").eq("patient_id", id).order("fecha", { ascending: false }),
+        supabase.from("profundizaciones_clinicas").select("fecha, dominio_principal, nivel_deterioro, resumen").eq("patient_id", id).order("fecha", { ascending: false }).limit(20),
       ]);
 
       setExtras({
@@ -67,6 +68,7 @@ function ReportePage() {
         signos: (signos ?? []) as any,
         caidas: (caidas ?? []) as any,
         evaluaciones: (evals ?? []) as any,
+        profundizaciones: (profs ?? []) as any,
       });
 
       setLoading(false);
