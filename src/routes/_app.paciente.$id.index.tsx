@@ -16,7 +16,8 @@ interface Patient {
   comorbilidades: unknown; objetivos: unknown; movilidad: string | null;
 }
 
-interface Chequeo { id: string; fecha: string; ieg: number; color: string }
+interface Chequeo { id: string; fecha: string; ieg: number; color: string; respuestas?: Record<string, string | string[]> }
+interface Profundizacion { fecha: string; dominio_principal: string | null; nivel_deterioro: string | null }
 
 const colorBg: Record<string, string> = {
   verde: "bg-[oklch(0.92_0.06_155)] text-[oklch(0.32_0.1_155)]",
