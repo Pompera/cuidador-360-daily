@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart, ShieldCheck, FileText, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoC360 from "@/assets/logo-c360.png.asset.json";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,7 +19,7 @@ function Landing() {
     <div className="min-h-screen bg-background">
       <header className="container-app pt-8 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="size-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-display font-bold">C</div>
+          <img src={logoC360.url} alt="Cuidador 360" className="size-10 object-contain" />
           <span className="font-display text-xl font-semibold">Cuidador 360</span>
         </div>
         <Link to="/auth" className="text-primary font-semibold">Entrar</Link>
