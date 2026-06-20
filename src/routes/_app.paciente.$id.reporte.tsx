@@ -11,6 +11,7 @@ import {
   type ReporteExtras,
 } from "@/lib/pdf";
 import type { Toma } from "@/lib/clinical/medicamentos";
+import { fechaHoy } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/paciente/$id/reporte")({
   component: ReportePage,
