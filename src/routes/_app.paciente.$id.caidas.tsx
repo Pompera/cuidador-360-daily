@@ -17,7 +17,7 @@ interface Caida {
   lesion: string | null; golpe_craneal: boolean; hospitalizacion: boolean;
 }
 
-const empty = { fecha: new Date().toISOString().slice(0, 10), lugar: "", circunstancia: "", lesion: "", golpe_craneal: false, hospitalizacion: false };
+const empty = { fecha: fechaHoy(), lugar: "", circunstancia: "", lesion: "", golpe_craneal: false, hospitalizacion: false };
 
 function Caidas() {
   const { id } = Route.useParams();
