@@ -31,10 +31,11 @@ export function evaluarSignos(s: SignosInput): Alerta[] {
     else if (fc > 110) a.push({ nivel: "amarillo", texto: `FC elevada (${fc})` });
   }
   if (t != null && t >= 38) a.push({ nivel: "rojo", texto: `Fiebre (${t}°C)` });
-  if (sat != null && sat < 92) a.push({ nivel: "rojo", texto: `Saturación baja (${sat}%)` });
+  if (sat != null && sat < 88) a.push({ nivel: "rojo", texto: `Saturación baja (${sat}%)` });
   if (g != null) {
-    if (g < 70) a.push({ nivel: "rojo", texto: `Glucosa baja (${g})` });
-    else if (g > 250) a.push({ nivel: "rojo", texto: `Glucosa muy alta (${g})` });
+    if (g < 80) a.push({ nivel: "rojo", texto: `Glucosa baja (${g} mg/dL)` });
+    else if (g > 250) a.push({ nivel: "rojo", texto: `Glucosa muy alta (${g} mg/dL)` });
+    else if (g > 180) a.push({ nivel: "amarillo", texto: `Glucosa elevada (${g} mg/dL)` });
   }
   return a;
 }
