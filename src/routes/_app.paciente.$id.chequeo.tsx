@@ -4,19 +4,14 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { PREGUNTAS, calcularIEG } from "@/lib/clinical/chequeo";
+import { PREGUNTAS, calcularIEG, COLOR_BG } from "@/lib/clinical/chequeo";
 import { detectarAlertas } from "@/lib/clinical/alertas";
+import { fechaHoy } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/paciente/$id/chequeo")({
   component: ChequeoDiario,
 });
 
-const colorBg: Record<string, string> = {
-  verde: "bg-[oklch(0.92_0.06_155)] text-[oklch(0.32_0.1_155)]",
-  amarillo: "bg-[oklch(0.93_0.08_85)] text-[oklch(0.4_0.12_70)]",
-  naranja: "bg-[oklch(0.88_0.1_55)] text-[oklch(0.4_0.14_45)]",
-  rojo: "bg-[oklch(0.88_0.1_25)] text-[oklch(0.4_0.18_25)]",
-};
 
 function ChequeoDiario() {
   const { id } = Route.useParams();
