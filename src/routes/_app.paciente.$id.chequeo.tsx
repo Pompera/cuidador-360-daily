@@ -4,19 +4,14 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { PREGUNTAS, calcularIEG } from "@/lib/clinical/chequeo";
+import { PREGUNTAS, calcularIEG, COLOR_BG } from "@/lib/clinical/chequeo";
 import { detectarAlertas } from "@/lib/clinical/alertas";
+import { fechaHoy } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/paciente/$id/chequeo")({
   component: ChequeoDiario,
 });
 
-const colorBg: Record<string, string> = {
-  verde: "bg-[oklch(0.92_0.06_155)] text-[oklch(0.32_0.1_155)]",
-  amarillo: "bg-[oklch(0.93_0.08_85)] text-[oklch(0.4_0.12_70)]",
-  naranja: "bg-[oklch(0.88_0.1_55)] text-[oklch(0.4_0.14_45)]",
-  rojo: "bg-[oklch(0.88_0.1_25)] text-[oklch(0.4_0.18_25)]",
-};
 
 function ChequeoDiario() {
   const { id } = Route.useParams();
@@ -57,7 +52,7 @@ function ChequeoDiario() {
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Sesión expirada");
-      const hoy = new Date().toISOString().slice(0, 10);
+      const hoy = fechaHoy();
       const { error } = await supabase.from("chequeos_diarios").upsert(
         {
           patient_id: id, owner_id: u.user.id, fecha: hoy,
@@ -106,7 +101,7 @@ function ChequeoDiario() {
           <div className="mt-8 rounded-3xl bg-card border border-border/60 p-6">
             <p className="text-muted-foreground">Índice de Estabilidad Geriátrica</p>
             <p className="font-display text-6xl font-semibold mt-1">{done.ieg}<span className="text-2xl text-muted-foreground">/100</span></p>
-            <span className={`inline-block mt-3 px-3 py-1 rounded-full font-semibold ${colorBg[done.color]}`}>
+            <span className={`inline-block mt-3 px-3 py-1 rounded-full font-semibold ${COLOR_BG[done.color]}`}>
               {done.interpretacion}
             </span>
           </div>

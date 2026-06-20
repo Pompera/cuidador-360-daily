@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus, LogOut, ChevronRight, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { COLOR_BG } from "@/lib/clinical/chequeo";
 
 export const Route = createFileRoute("/_app/app")({
   component: HomePage,
@@ -62,12 +63,6 @@ function HomePage() {
     navigate({ to: "/auth" });
   }
 
-  const colorBg: Record<string, string> = {
-    verde: "bg-[oklch(0.92_0.06_155)] text-[oklch(0.32_0.1_155)]",
-    amarillo: "bg-[oklch(0.93_0.08_85)] text-[oklch(0.4_0.12_70)]",
-    naranja: "bg-[oklch(0.88_0.1_55)] text-[oklch(0.4_0.14_45)]",
-    rojo: "bg-[oklch(0.88_0.1_25)] text-[oklch(0.4_0.18_25)]",
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,7 +111,7 @@ function HomePage() {
                             <AlertCircle className="size-3.5" /> Valoración pendiente
                           </span>
                         ) : u ? (
-                          <span className={`inline-flex items-center text-sm font-semibold px-2.5 py-1 rounded-full mt-1 ${u.color ? (colorBg[u.color] ?? "bg-secondary") : "bg-secondary"}`}>
+                          <span className={`inline-flex items-center text-sm font-semibold px-2.5 py-1 rounded-full mt-1 ${u.color ? (COLOR_BG[u.color] ?? "bg-secondary") : "bg-secondary"}`}>
                             IEG {u.ieg} · {u.fecha}
                           </span>
                         ) : (

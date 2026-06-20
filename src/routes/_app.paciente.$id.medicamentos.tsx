@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { calcularAdherencia, type Toma } from "@/lib/clinical/medicamentos";
+import { fechaHoy } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/paciente/$id/medicamentos")({
   component: Medicamentos,
@@ -21,7 +22,7 @@ function Medicamentos() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ nombre: "", dosis: "", frecuencia: "", fecha_inicio: "" });
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = fechaHoy();
 
   async function cargar() {
     const { data: m } = await supabase.from("medicamentos").select("*").eq("patient_id", id).eq("activo", true).order("created_at");

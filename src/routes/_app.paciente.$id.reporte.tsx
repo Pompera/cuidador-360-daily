@@ -11,6 +11,7 @@ import {
   type ReporteExtras,
 } from "@/lib/pdf";
 import type { Toma } from "@/lib/clinical/medicamentos";
+import { fechaHoy } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/paciente/$id/reporte")({
   component: ReportePage,
@@ -80,7 +81,7 @@ function ReportePage() {
     try {
       const doc = generarReportePDF(p, chequeos, extras);
       const nombre = p.nombre.replace(/\s+/g, "_");
-      doc.save(`Cuidador360_${nombre}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      doc.save(`Cuidador360_${nombre}_${fechaHoy()}.pdf`);
       toast.success("PDF descargado");
     } catch (err) {
       console.error(err);

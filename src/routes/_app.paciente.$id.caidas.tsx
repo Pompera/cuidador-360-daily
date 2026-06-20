@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { fechaHoy } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/paciente/$id/caidas")({
   component: Caidas,
@@ -17,7 +18,7 @@ interface Caida {
   lesion: string | null; golpe_craneal: boolean; hospitalizacion: boolean;
 }
 
-const empty = { fecha: new Date().toISOString().slice(0, 10), lugar: "", circunstancia: "", lesion: "", golpe_craneal: false, hospitalizacion: false };
+const empty = { fecha: fechaHoy(), lugar: "", circunstancia: "", lesion: "", golpe_craneal: false, hospitalizacion: false };
 
 function Caidas() {
   const { id } = Route.useParams();

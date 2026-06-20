@@ -44,6 +44,21 @@ function Signos() {
     if (Object.values(payload).every((v) => v == null)) {
       toast.error("Captura al menos un valor"); return;
     }
+    const RANGOS: Record<string, [number, number, string]> = {
+      ta_sistolica:  [50, 300, "TA sistólica (50–300 mmHg)"],
+      ta_diastolica: [30, 200, "TA diastólica (30–200 mmHg)"],
+      fc:            [20, 300, "Frecuencia cardíaca (20–300 lpm)"],
+      temperatura:   [30, 45,  "Temperatura (30–45 °C)"],
+      saturacion:    [50, 100, "Saturación (50–100%)"],
+      glucosa:       [20, 600, "Glucosa (20–600 mg/dL)"],
+    };
+    for (const [key, [min, max, label]] of Object.entries(RANGOS)) {
+      const v = payload[key as keyof typeof payload];
+      if (v != null && (v < min || v > max)) {
+        toast.error(`Valor fuera de rango: ${label}`);
+        return;
+      }
+    }
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const { error } = await supabase.from("signos_vitales").insert({

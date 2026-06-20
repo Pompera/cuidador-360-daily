@@ -153,6 +153,20 @@ export const COLOR_HEX: Record<ResultadoChequeo["color"], string> = {
   rojo: "#d04a3a",
 };
 
+export const COLOR_BG: Record<string, string> = {
+  verde: "bg-[oklch(0.92_0.06_155)] text-[oklch(0.32_0.1_155)]",
+  amarillo: "bg-[oklch(0.93_0.08_85)] text-[oklch(0.4_0.12_70)]",
+  naranja: "bg-[oklch(0.88_0.1_55)] text-[oklch(0.4_0.14_45)]",
+  rojo: "bg-[oklch(0.88_0.1_25)] text-[oklch(0.4_0.18_25)]",
+};
+
+export const ETIQUETA_COLOR: Record<string, string> = {
+  verde: "Estable",
+  amarillo: "Vigilancia",
+  naranja: "Deterioro",
+  rojo: "Alto riesgo",
+};
+
 export const AREA_LABEL: Record<string, string> = {
   cognicion: "Cognición",
   funcion: "Función",
