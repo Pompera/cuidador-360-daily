@@ -52,7 +52,7 @@ function ChequeoDiario() {
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Sesión expirada");
-      const hoy = new Date().toISOString().slice(0, 10);
+      const hoy = fechaHoy();
       const { error } = await supabase.from("chequeos_diarios").upsert(
         {
           patient_id: id, owner_id: u.user.id, fecha: hoy,
@@ -101,7 +101,7 @@ function ChequeoDiario() {
           <div className="mt-8 rounded-3xl bg-card border border-border/60 p-6">
             <p className="text-muted-foreground">Índice de Estabilidad Geriátrica</p>
             <p className="font-display text-6xl font-semibold mt-1">{done.ieg}<span className="text-2xl text-muted-foreground">/100</span></p>
-            <span className={`inline-block mt-3 px-3 py-1 rounded-full font-semibold ${colorBg[done.color]}`}>
+            <span className={`inline-block mt-3 px-3 py-1 rounded-full font-semibold ${COLOR_BG[done.color]}`}>
               {done.interpretacion}
             </span>
           </div>

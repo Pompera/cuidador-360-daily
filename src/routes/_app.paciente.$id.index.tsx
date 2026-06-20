@@ -56,7 +56,7 @@ function PatientHub() {
         .limit(1);
       const last = (profs ?? [])[0] as Profundizacion | undefined;
       setUltimaProf(last ?? null);
-      const hoy = new Date().toISOString().slice(0, 10);
+      const hoy = fechaHoy();
       setProfHoy(!!last && last.fecha === hoy);
       setLoading(false);
     })();
@@ -66,7 +66,7 @@ function PatientHub() {
   if (!p) return <div className="container-app pt-12">Paciente no encontrado.</div>;
 
   const ultimo = chequeos[0];
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = fechaHoy();
   const yaHoy = chequeos[0]?.fecha === hoy;
 
   const comorb = (Array.isArray(p.comorbilidades) ? p.comorbilidades : []) as string[];
@@ -102,8 +102,8 @@ function PatientHub() {
                 <p className="font-display text-5xl font-semibold">{ultimo.ieg}</p>
                 <p className="text-muted-foreground">/100 IEG</p>
               </div>
-              <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold ${colorBg[ultimo.color]}`}>
-                {etiquetaColor(ultimo.color)}
+              <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold ${COLOR_BG[ultimo.color]}`}>
+                {ETIQUETA_COLOR[ultimo.color] ?? ultimo.color}
               </span>
             </>
           ) : (
