@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus, LogOut, ChevronRight, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { COLOR_BG } from "@/lib/clinical/chequeo";
 
 export const Route = createFileRoute("/_app/app")({
   component: HomePage,
@@ -110,7 +111,7 @@ function HomePage() {
                             <AlertCircle className="size-3.5" /> Valoración pendiente
                           </span>
                         ) : u ? (
-                          <span className={`inline-flex items-center text-sm font-semibold px-2.5 py-1 rounded-full mt-1 ${u.color ? (colorBg[u.color] ?? "bg-secondary") : "bg-secondary"}`}>
+                          <span className={`inline-flex items-center text-sm font-semibold px-2.5 py-1 rounded-full mt-1 ${u.color ? (COLOR_BG[u.color] ?? "bg-secondary") : "bg-secondary"}`}>
                             IEG {u.ieg} · {u.fecha}
                           </span>
                         ) : (
