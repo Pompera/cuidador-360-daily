@@ -234,9 +234,6 @@ function Row({ k, v }: { k: string; v: string }) {
   );
 }
 
-function etiquetaColor(c: string) {
-  return ({ verde: "Estable", amarillo: "Vigilancia", naranja: "Deterioro", rojo: "Alto riesgo" } as Record<string, string>)[c] ?? c;
-}
 
 const colorFill: Record<string, string> = {
   verde: "fill-[oklch(0.58_0.12_155)]",
