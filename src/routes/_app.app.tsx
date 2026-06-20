@@ -62,12 +62,6 @@ function HomePage() {
     navigate({ to: "/auth" });
   }
 
-  const colorBg: Record<string, string> = {
-    verde: "bg-[oklch(0.92_0.06_155)] text-[oklch(0.32_0.1_155)]",
-    amarillo: "bg-[oklch(0.93_0.08_85)] text-[oklch(0.4_0.12_70)]",
-    naranja: "bg-[oklch(0.88_0.1_55)] text-[oklch(0.4_0.14_45)]",
-    rojo: "bg-[oklch(0.88_0.1_25)] text-[oklch(0.4_0.18_25)]",
-  };
 
   return (
     <div className="min-h-screen bg-background">
