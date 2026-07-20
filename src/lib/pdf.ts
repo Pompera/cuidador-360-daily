@@ -360,7 +360,7 @@ export function generarReportePDF(
 
   // Resumen
   sectionTitle(ctx, "Resumen clínico");
-  const resumen = generarResumen(paciente, ultimos);
+  const resumen = generarResumen(paciente, ultimos, meta.basal);
   wrap(ctx, resumen);
 
   // Pie de página en última página
