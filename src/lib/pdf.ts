@@ -442,7 +442,7 @@ function hexToRgb(h: string) {
   return { r: parseInt(v.slice(0, 2), 16), g: parseInt(v.slice(2, 4), 16), b: parseInt(v.slice(4, 6), 16) };
 }
 
-function generarResumen(p: ReportePaciente, chequeos: ReporteChequeo[]): string {
+function generarResumen(p: ReportePaciente, chequeos: ReporteChequeo[], basal: ReporteChequeo | null = null): string {
   if (chequeos.length === 0) {
     return `Paciente ${p.nombre}, ${p.edad ?? "—"} años. Aún sin chequeos diarios registrados. Se sugiere iniciar el seguimiento basal.`;
   }
