@@ -82,10 +82,21 @@ export interface ReporteExtras {
   profundizaciones?: ReporteProfundizacion[];
 }
 
+export type PeriodoReporte =
+  | { tipo: "global" }
+  | { tipo: "mes"; anio: number; mes: number };
+
+export interface ReporteMeta {
+  periodo: PeriodoReporte;
+  periodoLabel: string;
+  basal: ReporteChequeo | null;
+}
+
 export function generarReportePDF(
   paciente: ReportePaciente,
   ultimos: ReporteChequeo[],
   extras: ReporteExtras = { medicamentos: [], tomas: [], signos: [], caidas: [], evaluaciones: [] },
+  meta: ReporteMeta = { periodo: { tipo: "global" }, periodoLabel: "Global (desde el origen)", basal: null },
 ) {
   const doc = new jsPDF({ unit: "pt", format: "letter" });
   const W = doc.internal.pageSize.getWidth();
@@ -101,6 +112,8 @@ export function generarReportePDF(
   doc.setFont("helvetica", "normal"); doc.setFontSize(10);
   doc.setTextColor(100);
   doc.text(`Generado: ${new Date().toLocaleString("es-MX")}`, M, ctx.y);
+  ctx.y += 14;
+  doc.text(`Periodo: ${meta.periodoLabel}`, M, ctx.y);
   ctx.y += 18;
 
   // Paciente
@@ -121,6 +134,12 @@ export function generarReportePDF(
     doc.roundedRect(M, ctx.y - 10, 14, 14, 3, 3, "F");
     body(ctx, `IEG: ${ultimo.ieg}/100   (${etiquetaColor(ultimo.color)})`, M + 22);
     body(ctx, `Último chequeo: ${ultimo.fecha}`);
+    if (meta.basal) {
+      const dBasal = ultimo.ieg - meta.basal.ieg;
+      const signo = dBasal > 0 ? `+${dBasal}` : `${dBasal}`;
+      body(ctx, `IEG inicial (basal): ${meta.basal.ieg}/100 — ${meta.basal.fecha}`);
+      body(ctx, `Cambio vs basal: ${dBasal === 0 ? "sin cambio" : signo}`);
+    }
 
     // Comparación por área vs promedio de chequeos previos
     const areasUlt = puntajePorArea(ultimo.respuestas);
@@ -341,7 +360,7 @@ export function generarReportePDF(
 
   // Resumen
   sectionTitle(ctx, "Resumen clínico");
-  const resumen = generarResumen(paciente, ultimos);
+  const resumen = generarResumen(paciente, ultimos, meta.basal);
   wrap(ctx, resumen);
 
   // Pie de página en última página
@@ -423,7 +442,7 @@ function hexToRgb(h: string) {
   return { r: parseInt(v.slice(0, 2), 16), g: parseInt(v.slice(2, 4), 16), b: parseInt(v.slice(4, 6), 16) };
 }
 
-function generarResumen(p: ReportePaciente, chequeos: ReporteChequeo[]): string {
+function generarResumen(p: ReportePaciente, chequeos: ReporteChequeo[], basal: ReporteChequeo | null = null): string {
   if (chequeos.length === 0) {
     return `Paciente ${p.nombre}, ${p.edad ?? "—"} años. Aún sin chequeos diarios registrados. Se sugiere iniciar el seguimiento basal.`;
   }
@@ -443,5 +462,8 @@ function generarResumen(p: ReportePaciente, chequeos: ReporteChequeo[]): string 
   if (delta <= -10) tendencia = "con tendencia descendente respecto a días previos";
   else if (delta >= 10) tendencia = "con mejoría respecto a días previos";
 
-  return `Paciente ${p.nombre}, ${p.edad ?? "—"} años, ${estado}. IEG actual ${ultimo.ieg}/100, promedio de los últimos ${recientes.length} días: ${promedio}/100, ${tendencia}. Se sugiere priorizar evaluación dirigida según los hallazgos resaltados arriba.`;
+  const refBasal = basal
+    ? ` Respecto al IEG basal inicial (${basal.ieg}/100 del ${basal.fecha}), el cambio acumulado es ${ultimo.ieg - basal.ieg}.`
+    : "";
+  return `Paciente ${p.nombre}, ${p.edad ?? "—"} años, ${estado}. IEG actual ${ultimo.ieg}/100, promedio de los últimos ${recientes.length} días: ${promedio}/100, ${tendencia}. Se sugiere priorizar evaluación dirigida según los hallazgos resaltados arriba.${refBasal}`;
 }
