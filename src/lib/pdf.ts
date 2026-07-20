@@ -82,10 +82,21 @@ export interface ReporteExtras {
   profundizaciones?: ReporteProfundizacion[];
 }
 
+export type PeriodoReporte =
+  | { tipo: "global" }
+  | { tipo: "mes"; anio: number; mes: number };
+
+export interface ReporteMeta {
+  periodo: PeriodoReporte;
+  periodoLabel: string;
+  basal: ReporteChequeo | null;
+}
+
 export function generarReportePDF(
   paciente: ReportePaciente,
   ultimos: ReporteChequeo[],
   extras: ReporteExtras = { medicamentos: [], tomas: [], signos: [], caidas: [], evaluaciones: [] },
+  meta: ReporteMeta = { periodo: { tipo: "global" }, periodoLabel: "Global (desde el origen)", basal: null },
 ) {
   const doc = new jsPDF({ unit: "pt", format: "letter" });
   const W = doc.internal.pageSize.getWidth();
