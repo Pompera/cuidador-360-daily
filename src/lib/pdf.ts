@@ -134,6 +134,12 @@ export function generarReportePDF(
     doc.roundedRect(M, ctx.y - 10, 14, 14, 3, 3, "F");
     body(ctx, `IEG: ${ultimo.ieg}/100   (${etiquetaColor(ultimo.color)})`, M + 22);
     body(ctx, `Último chequeo: ${ultimo.fecha}`);
+    if (meta.basal) {
+      const dBasal = ultimo.ieg - meta.basal.ieg;
+      const signo = dBasal > 0 ? `+${dBasal}` : `${dBasal}`;
+      body(ctx, `IEG inicial (basal): ${meta.basal.ieg}/100 — ${meta.basal.fecha}`);
+      body(ctx, `Cambio vs basal: ${dBasal === 0 ? "sin cambio" : signo}`);
+    }
 
     // Comparación por área vs promedio de chequeos previos
     const areasUlt = puntajePorArea(ultimo.respuestas);
