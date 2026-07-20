@@ -112,6 +112,8 @@ export function generarReportePDF(
   doc.setFont("helvetica", "normal"); doc.setFontSize(10);
   doc.setTextColor(100);
   doc.text(`Generado: ${new Date().toLocaleString("es-MX")}`, M, ctx.y);
+  ctx.y += 14;
+  doc.text(`Periodo: ${meta.periodoLabel}`, M, ctx.y);
   ctx.y += 18;
 
   // Paciente
