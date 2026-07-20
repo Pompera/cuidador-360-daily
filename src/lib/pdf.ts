@@ -462,5 +462,8 @@ function generarResumen(p: ReportePaciente, chequeos: ReporteChequeo[], basal: R
   if (delta <= -10) tendencia = "con tendencia descendente respecto a días previos";
   else if (delta >= 10) tendencia = "con mejoría respecto a días previos";
 
-  return `Paciente ${p.nombre}, ${p.edad ?? "—"} años, ${estado}. IEG actual ${ultimo.ieg}/100, promedio de los últimos ${recientes.length} días: ${promedio}/100, ${tendencia}. Se sugiere priorizar evaluación dirigida según los hallazgos resaltados arriba.`;
+  const refBasal = basal
+    ? ` Respecto al IEG basal inicial (${basal.ieg}/100 del ${basal.fecha}), el cambio acumulado es ${ultimo.ieg - basal.ieg}.`
+    : "";
+  return `Paciente ${p.nombre}, ${p.edad ?? "—"} años, ${estado}. IEG actual ${ultimo.ieg}/100, promedio de los últimos ${recientes.length} días: ${promedio}/100, ${tendencia}. Se sugiere priorizar evaluación dirigida según los hallazgos resaltados arriba.${refBasal}`;
 }
