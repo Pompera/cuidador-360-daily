@@ -77,8 +77,8 @@ function ReportePage() {
         .eq("patient_id", id)
         .order("fecha", { ascending: true })
         .limit(1);
-      const basalRow = b?.[0]
-        ? { fecha: b[0].fecha, ieg: b[0].ieg, color: b[0].color as any, respuestas: (b[0].respuestas ?? {}) as any }
+      const basalRow: ReporteChequeo | null = b?.[0] && b[0].ieg != null
+        ? { fecha: b[0].fecha, ieg: b[0].ieg as number, color: b[0].color as any, respuestas: (b[0].respuestas ?? {}) as any }
         : null;
       setBasal(basalRow);
 
