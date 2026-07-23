@@ -14,6 +14,20 @@ import {
 } from "@/lib/pdf";
 import type { Toma } from "@/lib/clinical/medicamentos";
 import { fechaHoy } from "@/lib/utils";
+import logoC360 from "@/assets/logo-c360.png.asset.json";
+
+async function cargarLogoDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return await new Promise((resolve) => {
+      const fr = new FileReader();
+      fr.onloadend = () => resolve(fr.result as string);
+      fr.onerror = () => resolve(null);
+      fr.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
 
 export const Route = createFileRoute("/_app/paciente/$id/reporte")({
   component: ReportePage,
@@ -174,10 +188,11 @@ function ReportePage() {
       : new Date(per.anio, per.mes - 1).toLocaleDateString("es-MX", { month: "long", year: "numeric" });
   }
 
-  function descargar() {
+  async function descargar() {
     if (!p) return;
     try {
-      const meta: ReporteMeta = { periodo, periodoLabel: periodoLabel(periodo), basal };
+      const logoDataUrl = await cargarLogoDataUrl(logoC360.url);
+      const meta: ReporteMeta = { periodo, periodoLabel: periodoLabel(periodo), basal, logoDataUrl };
       const doc = generarReportePDF(p, chequeos, extras, meta);
       const nombre = p.nombre.replace(/\s+/g, "_");
       const sufijo = periodo.tipo === "global" ? "global" : `${periodo.anio}-${String(periodo.mes).padStart(2, "0")}`;
