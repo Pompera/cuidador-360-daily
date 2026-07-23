@@ -14,6 +14,20 @@ import {
 } from "@/lib/pdf";
 import type { Toma } from "@/lib/clinical/medicamentos";
 import { fechaHoy } from "@/lib/utils";
+import logoC360 from "@/assets/logo-c360.png.asset.json";
+
+async function cargarLogoDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return await new Promise((resolve) => {
+      const fr = new FileReader();
+      fr.onloadend = () => resolve(fr.result as string);
+      fr.onerror = () => resolve(null);
+      fr.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
 
 export const Route = createFileRoute("/_app/paciente/$id/reporte")({
   component: ReportePage,
