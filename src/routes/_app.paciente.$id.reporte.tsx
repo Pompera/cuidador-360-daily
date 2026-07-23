@@ -188,10 +188,11 @@ function ReportePage() {
       : new Date(per.anio, per.mes - 1).toLocaleDateString("es-MX", { month: "long", year: "numeric" });
   }
 
-  function descargar() {
+  async function descargar() {
     if (!p) return;
     try {
-      const meta: ReporteMeta = { periodo, periodoLabel: periodoLabel(periodo), basal };
+      const logoDataUrl = await cargarLogoDataUrl(logoC360.url);
+      const meta: ReporteMeta = { periodo, periodoLabel: periodoLabel(periodo), basal, logoDataUrl };
       const doc = generarReportePDF(p, chequeos, extras, meta);
       const nombre = p.nombre.replace(/\s+/g, "_");
       const sufijo = periodo.tipo === "global" ? "global" : `${periodo.anio}-${String(periodo.mes).padStart(2, "0")}`;
