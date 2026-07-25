@@ -140,7 +140,7 @@ export function generarReportePDF(
   ctx.y = topY + 6;
 
   setFont(doc, "normal", 10); setColor(doc, MUTED);
-  doc.text(`Periodo: ${meta.periodoLabel}`, M, ctx.y);
+  doc.text(ascii(`Periodo: ${meta.periodoLabel}`), M, ctx.y);
   ctx.y += SP.md;
 
   // ---------------- Paciente ----------------
@@ -167,9 +167,9 @@ export function generarReportePDF(
     doc.setFillColor(rgb.r, rgb.g, rgb.b);
     doc.roundedRect(M, chipY, chipW, chipH, 9, 9, "F");
     setColor(doc, WHITE);
-    doc.text(label, M + 10, chipY + 12);
+    doc.text(ascii(label), M + 10, chipY + 12);
     setColor(doc, INK); setFont(doc, "bold", 12);
-    doc.text(`IEG ${ultimo.ieg}/100`, M + chipW + 10, chipY + 12);
+    doc.text(ascii(`IEG ${ultimo.ieg}/100`), M + chipW + 10, chipY + 12);
     ctx.y = chipY + chipH + SP.sm;
 
     body(ctx, `Último chequeo: ${ultimo.fecha}`);
@@ -259,12 +259,12 @@ export function generarReportePDF(
       doc.setFillColor(rgb.r, rgb.g, rgb.b);
       doc.roundedRect(lgx, ctx.y - 7, 8, 8, 2, 2, "F");
       setColor(doc, MUTED);
-      doc.text(etiquetaColor(s), lgx + 12, ctx.y);
+      doc.text(ascii(etiquetaColor(s)), lgx + 12, ctx.y);
       lgx += doc.getTextWidth(etiquetaColor(s)) + 26;
     }
     ctx.y += SP.md;
     setColor(doc, MUTED); setFont(doc, "normal", 9);
-    doc.text(`Chequeos mostrados: ${recientes.length} (más reciente al final).`, M, ctx.y);
+    doc.text(ascii(`Chequeos mostrados: ${recientes.length} (mas reciente al final).`), M, ctx.y);
     ctx.y += SP.md;
   }
 
@@ -339,7 +339,7 @@ export function generarReportePDF(
         setColor(doc, WHITE);
         doc.text(tag, M + 5, ctx.y);
         setFont(doc, "normal", 10); setColor(doc, INK);
-        doc.text(`${a.fecha}  ${a.texto}`, M + tagW + 6, ctx.y);
+        doc.text(ascii(`${a.fecha}  ${a.texto}`), M + tagW + 6, ctx.y);
         ctx.y += SP.md;
       }
       ctx.y += SP.xs;
@@ -421,12 +421,33 @@ export function generarReportePDF(
   if (profs.length > 0) {
     sectionTitle(ctx, "Cambios clínicos detectados", ACCENT);
     for (const pr of profs.slice(0, 8)) {
-      ensureSpace(ctx, 40);
+      ensureSpace(ctx, 48);
+      let x = M;
+      setFont(doc, "normal", 11); setColor(doc, MUTED);
+      const fechaTxt = ascii(`- ${pr.fecha}   `);
+      doc.text(fechaTxt, x, ctx.y);
+      x += doc.getTextWidth(fechaTxt);
+
       setFont(doc, "bold", 11); setColor(doc, INK);
-      doc.text(`• ${pr.fecha} — ${pr.dominio_principal ?? "—"} (deterioro ${pr.nivel_deterioro ?? "—"})`, M, ctx.y);
+      const dom = ascii(pr.dominio_principal ?? "-");
+      doc.text(dom, x, ctx.y);
+      x += doc.getTextWidth(dom);
+
+      const nivel = (pr.nivel_deterioro ?? "").toLowerCase();
+      const colorSeveridad =
+        nivel === "alto" || nivel === "severo" ? hexToRgb(COLOR_HEX.rojo)
+        : nivel === "moderado" ? hexToRgb(COLOR_HEX.naranja)
+        : nivel === "leve" ? hexToRgb(COLOR_HEX.verde)
+        : MUTED;
+      setFont(doc, "normal", 11); setColor(doc, colorSeveridad);
+      doc.text(ascii(`  (deterioro ${pr.nivel_deterioro ?? "-"})`), x, ctx.y);
       ctx.y += SP.md;
-      if (pr.resumen) wrap(ctx, `   ${pr.resumen}`);
-      ctx.y += SP.xs;
+
+      if (pr.resumen) { setColor(doc, INK); wrap(ctx, `   ${pr.resumen}`); }
+      ensureSpace(ctx, SP.sm);
+      doc.setDrawColor(LINE.r, LINE.g, LINE.b); doc.setLineWidth(0.4);
+      doc.line(M, ctx.y, W - M, ctx.y);
+      ctx.y += SP.sm;
     }
   }
 
@@ -473,11 +494,11 @@ function drawPageChrome(
       try { doc.addImage(meta.logoDataUrl, "PNG", M, 16, 18, 18); } catch { /* noop */ }
     }
     setFont(doc, "bold", 9); setColor(doc, BRAND);
-    doc.text("Cuidador 360 — Resumen Geriátrico", meta.logoDataUrl ? M + 24 : M, 28);
+    doc.text(ascii("Cuidador 360 - Resumen Geriatrico"), meta.logoDataUrl ? M + 24 : M, 28);
   }
   // Fecha a la derecha (todas las páginas)
   setFont(doc, "normal", 8); setColor(doc, MUTED);
-  const fecha = `Generado: ${new Date().toLocaleString("es-MX")}`;
+  const fecha = ascii(`Generado: ${new Date().toLocaleString("es-MX")}`);
   doc.text(fecha, W - M, 28, { align: "right" });
 
   // Pie
@@ -489,7 +510,7 @@ function drawPageChrome(
     M, H - 26, { maxWidth: W - 2 * M - 80 },
   );
   setFont(doc, "normal", 8); setColor(doc, MUTED);
-  doc.text(`Página ${page} de ${total}`, W - M, H - 26, { align: "right" });
+  doc.text(ascii(`Pagina ${page} de ${total}`), W - M, H - 26, { align: "right" });
 }
 
 function ensureSpace(ctx: Ctx, h: number) {
@@ -512,27 +533,27 @@ function sectionTitle(ctx: Ctx, title: string, color: { r: number; g: number; b:
   ctx.doc.rect(x, ctx.y, 3, bandH, "F");
   // Título
   setFont(ctx.doc, "bold", 12); setColor(ctx.doc, BRAND);
-  ctx.doc.text(title, x + 12, ctx.y + 14);
+  ctx.doc.text(ascii(title), x + 12, ctx.y + 14);
   ctx.y += bandH + SP.sm;
 }
 
 function subheader(ctx: Ctx, text: string) {
   ensureSpace(ctx, 20);
   setFont(ctx.doc, "bold", 10); setColor(ctx.doc, BRAND);
-  ctx.doc.text(text, ctx.M, ctx.y);
+  ctx.doc.text(ascii(text), ctx.M, ctx.y);
   ctx.y += SP.md;
 }
 
 function body(ctx: Ctx, text: string, x?: number) {
   ensureSpace(ctx, 16);
   setFont(ctx.doc, "normal", 10); setColor(ctx.doc, INK);
-  ctx.doc.text(text, x ?? ctx.M, ctx.y);
+  ctx.doc.text(ascii(text), x ?? ctx.M, ctx.y);
   ctx.y += SP.md;
 }
 
 function wrap(ctx: Ctx, text: string) {
   setFont(ctx.doc, "normal", 10); setColor(ctx.doc, INK);
-  const lines = ctx.doc.splitTextToSize(text, ctx.W - 2 * ctx.M);
+  const lines = ctx.doc.splitTextToSize(ascii(text), ctx.W - 2 * ctx.M);
   ensureSpace(ctx, lines.length * 13);
   ctx.doc.text(lines, ctx.M, ctx.y);
   ctx.y += lines.length * 13;
@@ -546,8 +567,8 @@ function renderTable(
 ) {
   ensureSpace(ctx, 40);
   autoTable(ctx.doc, {
-    head: [head],
-    body,
+    head: [head.map(ascii)],
+    body: body.map((row) => row.map(ascii)),
     startY: ctx.y,
     theme: "grid",
     margin: { left: ctx.M, right: ctx.M, top: ctx.topY, bottom: ctx.H - ctx.bottomY + 10 },
@@ -576,11 +597,11 @@ function renderTable(
 
 function drawSpark(doc: jsPDF, label: string, data: (number | null)[], x: number, y: number, w: number, h: number) {
   setFont(doc, "normal", 8); setColor(doc, MUTED);
-  doc.text(label, x, y + 10);
+  doc.text(ascii(label), x, y + 10);
   const vals = data.filter((v): v is number => v != null).reverse();
   if (vals.length === 0) {
     setColor(doc, MUTED);
-    doc.text("—", x, y + 28);
+    doc.text("-", x, y + 28);
     return;
   }
   setColor(doc, INK); setFont(doc, "bold", 11);
@@ -598,11 +619,28 @@ function drawSpark(doc: jsPDF, label: string, data: (number | null)[], x: number
     doc.line(x1, y1, x2, y2);
   }
   setFont(doc, "normal", 7); setColor(doc, MUTED);
-  doc.text(`min ${min} · max ${max} · n=${vals.length}`, x, bot + 2);
+  doc.text(ascii(`min ${min} - max ${max} - n=${vals.length}`), x, bot + 2);
 }
 
 function etiquetaColor(c: ResultadoChequeo["color"]) {
   return { verde: "Estable", amarillo: "Vigilancia", naranja: "Deterioro", rojo: "Alto riesgo" }[c];
+}
+
+const ASCII_MAP: Record<string, string> = {
+  "\u2014": "-", "\u2013": "-", "\u2015": "-",
+  "\u201C": '"', "\u201D": '"', "\u2018": "'", "\u2019": "'",
+  "\u2022": "-", "\u00B7": "-",
+  "\u2192": "->", "\u2190": "<-", "\u25B2": "^", "\u25BC": "v", "\u2713": "OK",
+  "\u0394": "Dif ", "\u2206": "Dif ",
+  "\u2080": "0", "\u2081": "1", "\u2082": "2", "\u2083": "3", "\u2084": "4",
+  "\u00B2": "2", "\u00B3": "3", "\u00B0": " deg", "\u00B1": "+/-",
+  "\u2026": "...", "\u00A0": " ",
+};
+function ascii(s: unknown): string {
+  let str = String(s ?? "");
+  for (const [k, v] of Object.entries(ASCII_MAP)) str = str.split(k).join(v);
+  // eslint-disable-next-line no-control-regex
+  return str.replace(/[^\x20-\xFF]/g, "");
 }
 
 function hexToRgb(h: string) {
