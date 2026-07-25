@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Plus, Check, X, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Check, X, Trash2, Bell, BellRing, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,21 +8,31 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { calcularAdherencia, type Toma } from "@/lib/clinical/medicamentos";
 import { fechaHoy } from "@/lib/utils";
+import { activarNotificaciones, pushSoportado } from "@/lib/push/client";
 
 export const Route = createFileRoute("/_app/paciente/$id/medicamentos")({
   component: Medicamentos,
 });
 
 interface Med { id: string; nombre: string; dosis: string | null; frecuencia: string | null; fecha_inicio: string | null; activo: boolean }
+interface Horario { id: string; medicamento_id: string; hora: string; activo: boolean }
 
 function Medicamentos() {
   const { id } = Route.useParams();
   const [meds, setMeds] = useState<Med[]>([]);
   const [tomas, setTomas] = useState<Toma[]>([]);
+  const [horarios, setHorarios] = useState<Horario[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ nombre: "", dosis: "", frecuencia: "", fecha_inicio: "" });
+  const [nuevosHorarios, setNuevosHorarios] = useState<string[]>([]);
+  const [nuevaHora, setNuevaHora] = useState<Record<string, string>>({});
+  const [permiso, setPermiso] = useState<NotificationPermission | "no-soportado">("default");
   const hoy = fechaHoy();
+
+  useEffect(() => {
+    setPermiso(pushSoportado() ? Notification.permission : "no-soportado");
+  }, []);
 
   async function cargar() {
     const { data: m } = await supabase.from("medicamentos").select("*").eq("patient_id", id).eq("activo", true).order("created_at");
@@ -30,24 +40,67 @@ function Medicamentos() {
     const desde = new Date(); desde.setDate(desde.getDate() - 30);
     const { data: t } = await supabase.from("medicamento_tomas").select("medicamento_id, fecha, estado").eq("patient_id", id).gte("fecha", desde.toISOString().slice(0, 10));
     setTomas((t ?? []) as Toma[]);
+    const { data: h } = await supabase.from("medicamento_horarios").select("id, medicamento_id, hora, activo").eq("patient_id", id).order("hora");
+    setHorarios(((h ?? []) as Horario[]).map((x) => ({ ...x, hora: String(x.hora).slice(0, 5) })));
     setLoading(false);
   }
 
   useEffect(() => { cargar(); }, [id]);
 
+  async function activarPush() {
+    const r = await activarNotificaciones(true);
+    setPermiso(pushSoportado() ? Notification.permission : "no-soportado");
+    if (r === "ok") toast.success("Recordatorios activados en este dispositivo");
+    else if (r === "sin-permiso") toast.error("Debes permitir las notificaciones en el navegador");
+    else if (r === "no-soportado") toast.error("Este navegador no admite notificaciones");
+    else toast.error("No se pudieron activar los recordatorios");
+  }
+
   async function agregar() {
     if (!form.nombre.trim()) { toast.error("El nombre es obligatorio"); return; }
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    const { error } = await supabase.from("medicamentos").insert({
+    const { data: creado, error } = await supabase.from("medicamentos").insert({
       owner_id: u.user.id, patient_id: id, nombre: form.nombre.trim(),
       dosis: form.dosis.trim() || null, frecuencia: form.frecuencia.trim() || null,
       fecha_inicio: form.fecha_inicio || null,
-    });
-    if (error) { toast.error("No se pudo guardar"); return; }
+    }).select("id").single();
+    if (error || !creado) { toast.error("No se pudo guardar"); return; }
+
+    const validos = nuevosHorarios.filter(Boolean);
+    if (validos.length) {
+      await supabase.from("medicamento_horarios").insert(
+        validos.map((hora) => ({ owner_id: u.user!.id, patient_id: id, medicamento_id: creado.id, hora })),
+      );
+    }
     setForm({ nombre: "", dosis: "", frecuencia: "", fecha_inicio: "" });
+    setNuevosHorarios([]);
     setAdding(false);
     toast.success("Medicamento agregado");
+    cargar();
+  }
+
+  async function agregarHorario(medId: string) {
+    const hora = nuevaHora[medId];
+    if (!hora) { toast.error("Elige una hora"); return; }
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { error } = await supabase.from("medicamento_horarios").insert({
+      owner_id: u.user.id, patient_id: id, medicamento_id: medId, hora,
+    });
+    if (error) { toast.error("No se pudo guardar el horario"); return; }
+    setNuevaHora({ ...nuevaHora, [medId]: "" });
+    toast.success("Horario agregado");
+    cargar();
+  }
+
+  async function alternarHorario(h: Horario) {
+    await supabase.from("medicamento_horarios").update({ activo: !h.activo }).eq("id", h.id);
+    cargar();
+  }
+
+  async function borrarHorario(hId: string) {
+    await supabase.from("medicamento_horarios").delete().eq("id", hId);
     cargar();
   }
 
@@ -82,6 +135,33 @@ function Medicamentos() {
       </header>
 
       <main className="container-app pb-12 space-y-4">
+        <section className="rounded-3xl bg-card border border-border/60 p-5">
+          <div className="flex items-start gap-3">
+            <div className="size-11 rounded-2xl bg-secondary grid place-items-center shrink-0">
+              {permiso === "granted" ? <BellRing className="size-5 text-primary" /> : <Bell className="size-5" />}
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold">Recordatorios</p>
+              <p className="text-sm text-muted-foreground">
+                {permiso === "granted"
+                  ? "Activados en este dispositivo. Recibirás un aviso en cada horario configurado."
+                  : permiso === "no-soportado"
+                    ? "Este navegador no admite notificaciones."
+                    : "Activa las notificaciones para recibir avisos a la hora de cada medicamento."}
+              </p>
+              {permiso !== "granted" && permiso !== "no-soportado" && (
+                <Button onClick={activarPush} variant="outline" className="mt-3">
+                  <Bell /> Activar notificaciones
+                </Button>
+              )}
+              <p className="mt-3 text-xs text-muted-foreground">
+                En iPhone y iPad los avisos solo funcionan si agregas la app a la pantalla de inicio
+                (Compartir → Agregar a inicio).
+              </p>
+            </div>
+          </div>
+        </section>
+
         {loading ? (
           <p className="text-muted-foreground">Cargando…</p>
         ) : meds.length === 0 && !adding ? (
@@ -93,6 +173,7 @@ function Medicamentos() {
             const tomasMed = tomas.filter((t) => t.medicamento_id === m.id);
             const adh = calcularAdherencia(tomasMed, 7);
             const hoyToma = tomasMed.find((t) => t.fecha === hoy);
+            const hs = horarios.filter((h) => h.medicamento_id === m.id);
             return (
               <section key={m.id} className="rounded-3xl bg-card border border-border/60 p-5 shadow-[var(--shadow-card)]">
                 <div className="flex items-start justify-between gap-3">
@@ -122,6 +203,50 @@ function Medicamentos() {
                   >
                     <X /> Omitido
                   </Button>
+                </div>
+
+                <div className="mt-4 rounded-2xl bg-secondary/50 p-3">
+                  <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                    <Clock className="size-3.5" /> Horarios de recordatorio
+                  </p>
+                  {hs.length === 0 ? (
+                    <p className="mt-1 text-sm text-muted-foreground">Sin horarios configurados.</p>
+                  ) : (
+                    <ul className="mt-2 space-y-1.5">
+                      {hs.map((h) => (
+                        <li key={h.id} className="flex items-center gap-2">
+                          <button
+                            onClick={() => alternarHorario(h)}
+                            className={`h-9 min-w-20 rounded-xl px-3 text-sm font-semibold ${h.activo ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground border border-border"}`}
+                          >
+                            {h.hora}
+                          </button>
+                          <span className="text-xs text-muted-foreground flex-1">
+                            {h.activo ? "Activo" : "Pausado"}
+                          </span>
+                          <button
+                            onClick={() => borrarHorario(h.id)}
+                            className="size-9 rounded-xl text-muted-foreground hover:text-destructive grid place-items-center"
+                            aria-label="Eliminar horario"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="mt-2 flex gap-2">
+                    <Input
+                      type="time"
+                      value={nuevaHora[m.id] ?? ""}
+                      onChange={(e) => setNuevaHora({ ...nuevaHora, [m.id]: e.target.value })}
+                      className="flex-1"
+                      aria-label="Nueva hora"
+                    />
+                    <Button variant="outline" onClick={() => agregarHorario(m.id)}>
+                      <Plus /> Añadir
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="mt-4">
@@ -156,9 +281,34 @@ function Medicamentos() {
               <Label>Fecha de inicio (opcional)</Label>
               <Input type="date" value={form.fecha_inicio} onChange={(e) => setForm({ ...form, fecha_inicio: e.target.value })} />
             </div>
+            <div>
+              <Label>Horarios de recordatorio (opcional)</Label>
+              <div className="space-y-2 mt-1">
+                {nuevosHorarios.map((h, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Input
+                      type="time"
+                      value={h}
+                      onChange={(e) => setNuevosHorarios(nuevosHorarios.map((x, j) => (j === i ? e.target.value : x)))}
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => setNuevosHorarios(nuevosHorarios.filter((_, j) => j !== i))}
+                      aria-label="Quitar horario"
+                    >
+                      <X />
+                    </Button>
+                  </div>
+                ))}
+                <Button variant="outline" onClick={() => setNuevosHorarios([...nuevosHorarios, ""])}>
+                  <Plus /> Añadir horario
+                </Button>
+              </div>
+            </div>
             <div className="flex gap-2 pt-1">
               <Button onClick={agregar} className="flex-1">Guardar</Button>
-              <Button variant="outline" onClick={() => setAdding(false)}>Cancelar</Button>
+              <Button variant="outline" onClick={() => { setAdding(false); setNuevosHorarios([]); }}>Cancelar</Button>
             </div>
           </section>
         ) : (
