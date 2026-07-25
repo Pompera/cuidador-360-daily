@@ -108,6 +108,21 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  useEffect(() => {
+    if (!pushSoportado()) return;
+    let cancelado = false;
+    (async () => {
+      await registrarServiceWorker();
+      if (cancelado || Notification.permission !== "granted") return;
+      // Permiso ya concedido: refresca/repara la suscripción sin molestar al usuario.
+      await activarNotificaciones(false);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
