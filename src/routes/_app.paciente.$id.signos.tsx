@@ -125,10 +125,10 @@ function Signos() {
           <section className="rounded-3xl bg-card border border-border/60 p-5">
             <h2 className="font-display text-lg font-semibold mb-3">Tendencia</h2>
             <div className="grid grid-cols-2 gap-3">
-              <Spark label="TA sis" data={regs.map((r) => r.ta_sistolica)} />
-              <Spark label="TA dia" data={regs.map((r) => r.ta_diastolica)} />
-              <Spark label="FC" data={regs.map((r) => r.fc)} />
-              <Spark label="Temp" data={regs.map((r) => r.temperatura)} />
+              <Spark label="Presión Sistolica" data={regs.map((r) => r.ta_sistolica)} />
+              <Spark label="Presión Diastolica" data={regs.map((r) => r.ta_diastolica)} />
+              <Spark label="Frecuencia Cardiaca" data={regs.map((r) => r.fc)} />
+              <Spark label="Temperatura" data={regs.map((r) => r.temperatura)} />
               <Spark label="SatO₂" data={regs.map((r) => r.saturacion)} />
               <Spark label="Glucosa" data={regs.map((r) => r.glucosa)} />
             </div>
