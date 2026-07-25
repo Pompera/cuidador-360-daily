@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppAppRouteImport } from './routes/_app.app'
 import { Route as AppPacienteNuevoRouteImport } from './routes/_app.paciente.nuevo'
 import { Route as AppPacienteIdIndexRouteImport } from './routes/_app.paciente.$id.index'
+import { Route as ApiPublicHooksEnviarRecordatoriosRouteImport } from './routes/api/public/hooks/enviar-recordatorios'
 import { Route as AppPacienteIdSignosRouteImport } from './routes/_app.paciente.$id.signos'
 import { Route as AppPacienteIdReporteRouteImport } from './routes/_app.paciente.$id.reporte'
 import { Route as AppPacienteIdProfundizacionRouteImport } from './routes/_app.paciente.$id.profundizacion'
@@ -55,6 +56,12 @@ const AppPacienteIdIndexRoute = AppPacienteIdIndexRouteImport.update({
   path: '/paciente/$id/',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPublicHooksEnviarRecordatoriosRoute =
+  ApiPublicHooksEnviarRecordatoriosRouteImport.update({
+    id: '/api/public/hooks/enviar-recordatorios',
+    path: '/api/public/hooks/enviar-recordatorios',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppPacienteIdSignosRoute = AppPacienteIdSignosRouteImport.update({
   id: '/paciente/$id/signos',
   path: '/paciente/$id/signos',
@@ -123,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/paciente/$id/profundizacion': typeof AppPacienteIdProfundizacionRoute
   '/paciente/$id/reporte': typeof AppPacienteIdReporteRoute
   '/paciente/$id/signos': typeof AppPacienteIdSignosRoute
+  '/api/public/hooks/enviar-recordatorios': typeof ApiPublicHooksEnviarRecordatoriosRoute
   '/paciente/$id/': typeof AppPacienteIdIndexRoute
   '/paciente/$id/escalas/jenkins': typeof AppPacienteIdEscalasJenkinsRoute
   '/paciente/$id/escalas/zarit': typeof AppPacienteIdEscalasZaritRoute
@@ -140,6 +148,7 @@ export interface FileRoutesByTo {
   '/paciente/$id/profundizacion': typeof AppPacienteIdProfundizacionRoute
   '/paciente/$id/reporte': typeof AppPacienteIdReporteRoute
   '/paciente/$id/signos': typeof AppPacienteIdSignosRoute
+  '/api/public/hooks/enviar-recordatorios': typeof ApiPublicHooksEnviarRecordatoriosRoute
   '/paciente/$id': typeof AppPacienteIdIndexRoute
   '/paciente/$id/escalas/jenkins': typeof AppPacienteIdEscalasJenkinsRoute
   '/paciente/$id/escalas/zarit': typeof AppPacienteIdEscalasZaritRoute
@@ -159,6 +168,7 @@ export interface FileRoutesById {
   '/_app/paciente/$id/profundizacion': typeof AppPacienteIdProfundizacionRoute
   '/_app/paciente/$id/reporte': typeof AppPacienteIdReporteRoute
   '/_app/paciente/$id/signos': typeof AppPacienteIdSignosRoute
+  '/api/public/hooks/enviar-recordatorios': typeof ApiPublicHooksEnviarRecordatoriosRoute
   '/_app/paciente/$id/': typeof AppPacienteIdIndexRoute
   '/_app/paciente/$id/escalas/jenkins': typeof AppPacienteIdEscalasJenkinsRoute
   '/_app/paciente/$id/escalas/zarit': typeof AppPacienteIdEscalasZaritRoute
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/paciente/$id/profundizacion'
     | '/paciente/$id/reporte'
     | '/paciente/$id/signos'
+    | '/api/public/hooks/enviar-recordatorios'
     | '/paciente/$id/'
     | '/paciente/$id/escalas/jenkins'
     | '/paciente/$id/escalas/zarit'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/paciente/$id/profundizacion'
     | '/paciente/$id/reporte'
     | '/paciente/$id/signos'
+    | '/api/public/hooks/enviar-recordatorios'
     | '/paciente/$id'
     | '/paciente/$id/escalas/jenkins'
     | '/paciente/$id/escalas/zarit'
@@ -213,6 +225,7 @@ export interface FileRouteTypes {
     | '/_app/paciente/$id/profundizacion'
     | '/_app/paciente/$id/reporte'
     | '/_app/paciente/$id/signos'
+    | '/api/public/hooks/enviar-recordatorios'
     | '/_app/paciente/$id/'
     | '/_app/paciente/$id/escalas/jenkins'
     | '/_app/paciente/$id/escalas/zarit'
@@ -223,6 +236,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicHooksEnviarRecordatoriosRoute: typeof ApiPublicHooksEnviarRecordatoriosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -268,6 +282,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/paciente/$id/'
       preLoaderRoute: typeof AppPacienteIdIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/api/public/hooks/enviar-recordatorios': {
+      id: '/api/public/hooks/enviar-recordatorios'
+      path: '/api/public/hooks/enviar-recordatorios'
+      fullPath: '/api/public/hooks/enviar-recordatorios'
+      preLoaderRoute: typeof ApiPublicHooksEnviarRecordatoriosRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/paciente/$id/signos': {
       id: '/_app/paciente/$id/signos'
@@ -380,17 +401,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicHooksEnviarRecordatoriosRoute:
+    ApiPublicHooksEnviarRecordatoriosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

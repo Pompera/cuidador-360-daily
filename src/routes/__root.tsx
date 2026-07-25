@@ -13,6 +13,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { pushSoportado, registrarServiceWorker, activarNotificaciones } from "@/lib/push/client";
+
 
 function NotFoundComponent() {
   return (
@@ -107,6 +109,21 @@ function RootComponent() {
     });
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
+
+  useEffect(() => {
+    if (!pushSoportado()) return;
+    let cancelado = false;
+    (async () => {
+      await registrarServiceWorker();
+      if (cancelado || Notification.permission !== "granted") return;
+      // Permiso ya concedido: refresca/repara la suscripción sin molestar al usuario.
+      await activarNotificaciones(false);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
 
   return (
     <QueryClientProvider client={queryClient}>
