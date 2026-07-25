@@ -4,6 +4,9 @@
 
 const enc = new TextEncoder();
 
+/** Los tipos DOM exigen ArrayBuffer estricto; nuestros Uint8Array siempre lo son. */
+const bs = (u: Uint8Array): BufferSource => u as unknown as BufferSource;
+
 function b64urlToBytes(s: string): Uint8Array {
   const pad = s.replace(/-/g, "+").replace(/_/g, "/");
   const bin = atob(pad + "=".repeat((4 - (pad.length % 4)) % 4));
@@ -30,8 +33,8 @@ function concat(...arrays: Uint8Array[]): Uint8Array {
 }
 
 async function hmac(key: Uint8Array, data: Uint8Array): Promise<Uint8Array> {
-  const k = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  return new Uint8Array(await crypto.subtle.sign("HMAC", k, data));
+  const k = await crypto.subtle.importKey("raw", bs(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return new Uint8Array(await crypto.subtle.sign("HMAC", k, bs(data)));
 }
 
 /** JWT ES256 firmado con la clave privada VAPID (d en base64url). */
@@ -67,7 +70,7 @@ async function encryptPayload(plaintext: string, p256dh: string, authSecret: str
 
   const asKeys = await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveBits"]);
   const asPublic = new Uint8Array(await crypto.subtle.exportKey("raw", asKeys.publicKey));
-  const uaKey = await crypto.subtle.importKey("raw", uaPublic, { name: "ECDH", namedCurve: "P-256" }, false, []);
+  const uaKey = await crypto.subtle.importKey("raw", bs(uaPublic), { name: "ECDH", namedCurve: "P-256" }, false, []);
   const shared = new Uint8Array(
     await crypto.subtle.deriveBits({ name: "ECDH", public: uaKey }, asKeys.privateKey, 256),
   );
@@ -81,10 +84,10 @@ async function encryptPayload(plaintext: string, p256dh: string, authSecret: str
   const cek = (await hmac(prk, concat(enc.encode("Content-Encoding: aes128gcm\0"), new Uint8Array([1])))).slice(0, 16);
   const nonce = (await hmac(prk, concat(enc.encode("Content-Encoding: nonce\0"), new Uint8Array([1])))).slice(0, 12);
 
-  const aesKey = await crypto.subtle.importKey("raw", cek, { name: "AES-GCM" }, false, ["encrypt"]);
+  const aesKey = await crypto.subtle.importKey("raw", bs(cek), { name: "AES-GCM" }, false, ["encrypt"]);
   const record = concat(enc.encode(plaintext), new Uint8Array([2])); // delimitador de padding
   const ciphertext = new Uint8Array(
-    await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, aesKey, record),
+    await crypto.subtle.encrypt({ name: "AES-GCM", iv: bs(nonce) }, aesKey, bs(record)),
   );
 
   const rs = new Uint8Array(4);
