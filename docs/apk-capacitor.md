@@ -63,3 +63,19 @@ Los recordatorios actuales usan **Web Push**, que funciona en el navegador y en
 la PWA instalada. Dentro del APK, Android puede no entregar esas notificaciones
 en segundo plano de forma fiable. Si los recordatorios son críticos en el APK,
 el siguiente paso es migrar a `@capacitor/push-notifications` con Firebase (FCM).
+
+## Icono de la app en el APK
+
+La web ya usa el logo como favicon e icono de PWA (`public/icon-192.png`,
+`public/icon-512.png`, `public/apple-touch-icon.png`, `public/manifest.webmanifest`).
+
+Para que el APK use el mismo logo en el lanzador de Android, tras `npx cap add android`:
+
+```bash
+mkdir -p resources
+cp public/icon-512.png resources/icon.png
+npx @capacitor/assets generate --android
+npx cap sync
+```
+
+Eso genera todos los tamaños de icono nativos en `android/app/src/main/res/`.
