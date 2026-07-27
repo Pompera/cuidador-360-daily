@@ -14,6 +14,11 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { pushSoportado, registrarServiceWorker, activarNotificaciones } from "@/lib/push/client";
+import { usaModoOffline } from "@/lib/plataforma";
+import { abrirDB } from "@/lib/db";
+import { guardarSesionLocal, restaurarSesionNube } from "@/lib/auth/sesion";
+import { iniciarSync } from "@/lib/sync/sync-manager";
+
 
 
 function NotFoundComponent() {
