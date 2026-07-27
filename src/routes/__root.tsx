@@ -109,10 +109,26 @@ function RootComponent() {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      if (event !== "SIGNED_OUT") {
+        queryClient.invalidateQueries();
+        // Guarda la sesión en el dispositivo para poder entrar sin Internet.
+        void guardarSesionLocal();
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
+
+  // Modo offline (APK): abre la base local, restaura la sesión guardada
+  // y arranca la sincronización en segundo plano.
+  useEffect(() => {
+    if (!usaModoOffline()) return;
+    void (async () => {
+      await abrirDB();
+      await restaurarSesionNube();
+      await iniciarSync();
+    })();
+  }, []);
+
 
   useEffect(() => {
     if (!pushSoportado()) return;
