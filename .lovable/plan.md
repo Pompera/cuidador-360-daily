@@ -1,64 +1,87 @@
+## Objetivo
 
-# Recordatorios de medicamentos vía Web Push
+Convertir Cuidador 360 en una app offline-first para el APK Android, sin cambiar la interfaz ni perder funciones. La app leerá y escribirá siempre en una base de datos local del teléfono; la nube pasa a ser solo servidor de sincronización.
 
-Objetivo: avisar al cuidador a las horas configuradas de cada medicamento. Son **solo recordatorios**: no cambian el registro de tomas, ni `medicamento_tomas`, ni `registrar`, ni `calcularAdherencia`, ni el campo de frecuencia en texto libre.
+## Hallazgos del análisis (verificados)
 
-## Ajuste importante respecto a tu especificación
+- `capacitor.config.ts` usa `server.url` apuntando a la web publicada: hoy el APK **descarga la app de Internet en cada arranque**. Sin este cambio, nada de offline funciona.
+- 14 pantallas hablan directamente con la nube (`supabase.from` / `supabase.auth`): lista de pacientes, alta de paciente, chequeo diario, medicamentos, signos, caídas, escalas, profundización, reporte y login.
+- La sesión se guarda en `localStorage` con refresco automático de token: sin Internet, el refresco falla y puede expulsar al usuario.
+- Los recordatorios usan Web Push (requiere servidor); pasarán a notificaciones locales del teléfono.
 
-Este proyecto es TanStack Start sobre Lovable Cloud, donde el backend propio de la app corre en el servidor de TanStack, no en Supabase Edge Functions (crear `supabase/functions/` aquí no se despliega). Implemento la misma lógica exacta en una **ruta de servidor pública** `/api/public/hooks/enviar-recordatorios`, llamada por el cron cada 5 minutos con la clave del proyecto en el header. Todo lo demás (tablas, RLS, cron, SW, UI, VAPID) se hace tal como pides. Tampoco toco `vite.config.ts`.
+## Cambio de empaquetado (base de todo)
 
-## 1. Base de datos (migración nueva y aditiva)
+- La app se compila en modo aplicación de una sola página y se empaqueta dentro del APK; se elimina `server.url`.
+- Consecuencia acordada: los cambios futuros ya no llegan solos al teléfono; hay que recompilar el APK.
+- El sitio web actual sigue funcionando igual (online). El modo offline es exclusivo del APK.
 
-Tres tablas nuevas, siguiendo las convenciones existentes (RLS, policy `auth.uid() = owner_id`, GRANTs a `authenticated`/`service_role`, trigger `tg_set_updated_at`, `gen_random_uuid()`, FKs con `ON DELETE CASCADE`):
+## Arquitectura
 
-- `medicamento_horarios`: owner_id, patient_id, medicamento_id, hora (time), activo, timestamps, índice por medicamento_id.
-- `push_subscriptions`: owner_id, endpoint (único), p256dh, auth, created_at.
-- `recordatorio_envios`: horario_id, fecha, hora, created_at, `UNIQUE (horario_id, fecha, hora)`; RLS activo sin políticas para usuarios (solo service_role escribe).
+```text
+Pantallas (UI, sin cambios visuales)
+        ↓
+Repositorios (pacientes, chequeos, ...)
+        ↓
+SQLite local (fuente de verdad)
+        ↓
+SyncManager (cola + reintentos)
+        ↓
+Nube (solo sincronización)
+```
 
-Además: habilitar `pg_cron` y `pg_net`, y programar un job cada 5 minutos que haga POST a la ruta del hook. Si alguna extensión no puede habilitarse, el bloque queda comentado y documento la alternativa con un scheduler externo.
+Ninguna pantalla vuelve a llamar a la nube directamente.
 
-## 2. Endpoint de envío
+## Base de datos local
 
-`src/routes/api/public/hooks/enviar-recordatorios.ts`:
+Cada tabla local replica la de la nube y añade cuatro campos de control:
 
-1. Calcula la hora actual en `America/Mexico_City` y una ventana de ±5 minutos.
-2. Busca horarios activos dentro de la ventana.
-3. Descarta los que ya tengan fila en `recordatorio_envios` para esa fecha+hora.
-4. Carga las suscripciones push del dueño del horario.
-5. Envía la notificación (título "Recordatorio de medicamento", cuerpo con nombre y dosis).
-6. Inserta el registro anti-duplicado.
-7. Borra suscripciones que respondan 404/410.
+- `sync_status`: `pending`, `synced`, `updated`, `deleted`, `failed`
+- `last_modified`: marca de tiempo para resolver conflictos
+- `deleted_at`: borrado lógico (nunca se pierde información)
+- `sync_error`: último motivo de fallo
 
-Nunca lee ni escribe `medicamento_tomas`. Usa el cliente administrador solo dentro del handler y valida la clave del llamante antes de actuar.
+Los borrados son lógicos hasta confirmarse en la nube. Se crean índices por paciente y por fecha para que las listas y el historial carguen rápido.
 
-Detalle técnico: la librería `web-push` de Node no funciona en este runtime; el cifrado VAPID/aes128gcm se implementa con Web Crypto (o una librería compatible con edge), que es el mismo protocolo estándar.
+## Sincronización (automática, sin botón)
 
-## 3. Service worker
+1. Detecta conexión con el plugin de red de Capacitor y al volver la app al primer plano.
+2. Sube los registros `pending` / `updated` / `deleted` en orden de dependencia (paciente antes que sus registros).
+3. Descarga cambios de la nube desde la última marca de sincronización.
+4. Conflictos: gana el `last_modified` más reciente.
+5. Sin duplicados: cada registro se crea con su identificador definitivo en el teléfono, así subirlo dos veces no crea copias.
+6. Reintentos con espera creciente; los fallos quedan como `failed` y se reintentan solos.
+7. Todo en segundo plano y silencioso: nunca se muestran mensajes de "sin Internet" ni "error de conexión".
 
-`public/sw.js` estático servido en la raíz (scope `/`), sin plugins de Vite:
-- evento `push`: muestra la notificación con el payload JSON.
-- evento `notificationclick`: abre o enfoca la app en la pantalla de medicamentos del paciente.
+## Autenticación offline
 
-Este SW es solo de notificaciones: no cachea nada ni cambia el comportamiento offline.
+- Tras un primer inicio de sesión exitoso, se guarda la sesión en el almacenamiento seguro del dispositivo (Preferences).
+- Al abrir sin Internet: si existe sesión previa válida, entra directo. El refresco de token se intenta solo cuando hay red.
+- El cierre de sesión sigue funcionando igual y limpia los datos locales de esa cuenta.
 
-## 4. Registro en el cliente
+## Fase 1 (esta entrega, para probar en Android)
 
-En el `useEffect` de `RootComponent` (`src/routes/__root.tsx`), junto al listener de sesión, con guards: `typeof window !== "undefined"`, `"serviceWorker" in navigator`, `"PushManager" in window`. Registra el SW; si hay sesión y el permiso está concedido, se suscribe con la clave pública VAPID y hace upsert por `endpoint` en `push_subscriptions`. No bloquea el render ni pide permiso de forma agresiva en el arranque.
+1. Empaquetado en el APK y configuración de Capacitor (SQLite, red, preferencias).
+2. Capa de base de datos local: apertura, migraciones versionadas, utilidades comunes.
+3. SyncManager completo (cola, reintentos, conflictos, marcas de estado).
+4. Sesión offline.
+5. Repositorios y conversión de: **perfil, lista de pacientes, alta de paciente (10 pasos) y chequeo diario** (incluye el cálculo del índice y la detección de alertas, que ya son locales).
+6. Migración de datos: al primer arranque con sesión y red, se descarga todo lo existente de la nube al teléfono; no se borra nada.
+7. Guía actualizada para compilar y probar el APK.
 
-## 5. UI de horarios
+## Fases siguientes (tras tu prueba en Android)
 
-En `src/routes/_app.paciente.$id.medicamentos.tsx`:
-- Al agregar un medicamento y desde cada tarjeta, se pueden añadir uno o varios horarios con `<input type="time">`.
-- Lista de horarios por medicamento con interruptor de activo/inactivo y borrado.
-- Botón para activar notificaciones (solicita permiso con un gesto del usuario, que es lo que exigen los navegadores).
-- Aviso: en iPhone/iPad las notificaciones solo funcionan si se instala la app en la pantalla de inicio.
-- Se conserva intacto el campo de frecuencia en texto libre y toda la lógica de tomas y adherencia.
+- **Fase 2:** bitácoras — medicamentos (con notificaciones locales), signos vitales y caídas.
+- **Fase 3:** escalas mensuales, profundización clínica y reporte PDF (el PDF ya se genera en el teléfono; solo cambia el origen de los datos).
 
-## 6. Claves y secretos
+## Detalles técnicos
 
-- Genero el par VAPID. La clave pública (no sensible) va en el código del cliente; la privada y el asunto se guardan como secretos del backend (`VAPID_PRIVATE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_SUBJECT`). La clave de servicio nunca llega al navegador.
-- Dejo un `README` corto con el comando para regenerar las claves y los pasos para probar el flujo de punta a punta.
+- Nuevas dependencias: `@capacitor-community/sqlite`, `@capacitor/preferences`, `@capacitor/network`, y en Fase 2 `@capacitor/local-notifications`.
+- Archivos nuevos: `src/lib/db/` (conexión, esquema, migraciones), `src/lib/repos/` (un repositorio por entidad), `src/lib/sync/` (SyncManager, cola, resolución de conflictos), `src/lib/auth/offline-session.ts`.
+- Archivos modificados en Fase 1: `capacitor.config.ts`, `vite.config.ts`, `src/routes/__root.tsx`, `src/routes/_app.tsx`, `src/routes/auth.tsx`, `src/routes/_app.app.tsx`, `src/routes/_app.paciente.nuevo.tsx`, `src/routes/_app.paciente.$id.chequeo.tsx`, `src/routes/_app.paciente.$id.index.tsx`, `docs/apk-capacitor.md`.
+- Sin cambios de esquema en la nube en Fase 1; las tablas ya tienen `updated_at`/`created_at`. Si en Fase 2 falta alguna marca de tiempo para conflictos, se propondrá una migración aparte.
+- El navegador seguirá usando la nube directamente (los repositorios detectan plataforma), así el editor y la web publicada no se rompen.
 
-## Verificación
+## Requiere revisión manual tuya
 
-Llamada manual al endpoint con un horario de prueba, confirmando que se crea la fila anti-duplicado, que una segunda llamada en la misma ventana no reenvía, y revisión en el navegador de que el SW queda registrado y la suscripción se guarda.
+- Compilar y probar el APK en tu PC al terminar cada fase (`npm install → npm run build → npx cap sync → npx cap open android`).
+- Confirmar el comportamiento en modo avión: crear paciente, hacer chequeo, cerrar app, reconectar y ver que sube solo.
