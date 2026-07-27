@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { pacientesRepo } from "@/lib/repos/pacientes";
+import { usuarioActual } from "@/lib/auth/sesion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -98,10 +99,10 @@ function NuevoPaciente() {
   async function guardar() {
     setSaving(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Sesión expirada");
-      const { data, error } = await supabase.from("patients").insert({
-        owner_id: u.user.id,
+      const usuario = await usuarioActual();
+      if (!usuario) throw new Error("Sesión expirada");
+      const paciente = await pacientesRepo.crear({
+        owner_id: usuario.id,
         nombre,
         edad: edad ? Number(edad) : null,
         sexo: sexo || null,
@@ -126,10 +127,9 @@ function NuevoPaciente() {
         jenkins_basal: jenkinsDone ? jenkinsTotal : null,
         zarit_basal: zaritDone ? zaritTotal : null,
         valoracion_completa: true,
-      }).select("id").single();
-      if (error) throw error;
+      });
       toast.success("Adulto mayor registrado");
-      navigate({ to: "/paciente/$id", params: { id: data.id } });
+      navigate({ to: "/paciente/$id", params: { id: paciente.id } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo guardar");
     } finally {
