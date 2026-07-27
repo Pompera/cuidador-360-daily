@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { chequeosRepo } from "@/lib/repos/chequeos";
+import { usuarioActual } from "@/lib/auth/sesion";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { PREGUNTAS, calcularIEG, COLOR_BG } from "@/lib/clinical/chequeo";
@@ -50,35 +51,22 @@ function ChequeoDiario() {
     setSaving(true);
     const resultado = calcularIEG(currentResp);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Sesión expirada");
+      const usuario = await usuarioActual();
+      if (!usuario) throw new Error("Sesión expirada");
       const hoy = fechaHoy();
-      const { error } = await supabase.from("chequeos_diarios").upsert(
-        {
-          patient_id: id, owner_id: u.user.id, fecha: hoy,
-          respuestas: currentResp, ieg: resultado.ieg, color: resultado.color,
-        },
-        { onConflict: "patient_id,fecha" },
-      );
-      // upsert needs unique constraint; if missing, fallback to insert
-      if (error) {
-        const { error: e2 } = await supabase.from("chequeos_diarios").insert({
-          patient_id: id, owner_id: u.user.id, fecha: hoy,
-          respuestas: currentResp, ieg: resultado.ieg, color: resultado.color,
-        });
-        if (e2) throw e2;
-      }
-      // Detectar alertas con el chequeo de hoy + previos
-      const { data: prev } = await supabase
-        .from("chequeos_diarios")
-        .select("fecha, respuestas")
-        .eq("patient_id", id)
-        .neq("fecha", hoy)
-        .order("fecha", { ascending: false })
-        .limit(6);
+      await chequeosRepo.guardarDelDia({
+        patient_id: id,
+        owner_id: usuario.id,
+        fecha: hoy,
+        respuestas: currentResp,
+        ieg: resultado.ieg,
+        color: resultado.color,
+      });
+      // Detectar alertas con el chequeo de hoy + los previos
+      const previos = (await chequeosRepo.historial(id, 7)).filter((c) => c.fecha !== hoy).slice(0, 6);
       const hist = [
         { fecha: hoy, respuestas: currentResp as Record<string, string | string[]> },
-        ...((prev ?? []) as Array<{ fecha: string; respuestas: Record<string, string | string[]> }>),
+        ...previos.map((c) => ({ fecha: c.fecha, respuestas: (c.respuestas ?? {}) as Record<string, string | string[]> })),
       ];
       const det = detectarAlertas(hist);
       setDominiosAlerta(det.dominios);
