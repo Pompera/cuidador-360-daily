@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ClipboardCheck, FileDown, TrendingUp, AlertCircle, BookOpen, ListChecks, Activity } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { pacientesRepo } from "@/lib/repos/pacientes";
+import { chequeosRepo } from "@/lib/repos/chequeos";
+import { profundizacionesRepo } from "@/lib/repos/profundizaciones";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { detectarAlertas, labelDominio, type Dominio } from "@/lib/clinical/alertas";
@@ -34,27 +36,16 @@ function PatientHub() {
 
   useEffect(() => {
     (async () => {
-      const { data: pat } = await supabase.from("patients").select("*").eq("id", id).maybeSingle();
-      setP(pat as Patient | null);
-      const { data: c } = await supabase
-        .from("chequeos_diarios")
-        .select("id, fecha, ieg, color, respuestas")
-        .eq("patient_id", id)
-        .order("fecha", { ascending: false })
-        .limit(30);
-      const chs = (c ?? []) as Chequeo[];
+      const pat = await pacientesRepo.obtener(id);
+      setP(pat as unknown as Patient | null);
+      const chs = (await chequeosRepo.historial(id, 30)) as unknown as Chequeo[];
       setChequeos(chs);
       const det = detectarAlertas(
         chs.slice(0, 7).map((x) => ({ fecha: x.fecha, respuestas: (x.respuestas ?? {}) as Record<string, string | string[]> })),
       );
       setAlertaDominios(det.dominios);
-      const { data: profs } = await supabase
-        .from("profundizaciones_clinicas")
-        .select("fecha, dominio_principal, nivel_deterioro")
-        .eq("patient_id", id)
-        .order("fecha", { ascending: false })
-        .limit(1);
-      const last = (profs ?? [])[0] as Profundizacion | undefined;
+      const profs = await profundizacionesRepo.ultima(id);
+      const last = profs[0] as unknown as Profundizacion | undefined;
       setUltimaProf(last ?? null);
       const hoy = fechaHoy();
       setProfHoy(!!last && last.fecha === hoy);
@@ -74,8 +65,12 @@ function PatientHub() {
 
   async function eliminar() {
     if (!confirm(`¿Eliminar a ${p?.nombre}? Esta acción no se puede deshacer.`)) return;
-    const { error } = await supabase.from("patients").delete().eq("id", id);
-    if (error) { toast.error("No se pudo eliminar"); return; }
+    try {
+      await pacientesRepo.eliminar(id);
+    } catch {
+      toast.error("No se pudo eliminar");
+      return;
+    }
     toast.success("Eliminado");
     navigate({ to: "/app" });
   }

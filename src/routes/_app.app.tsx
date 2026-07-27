@@ -1,6 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { pacientesRepo } from "@/lib/repos/pacientes";
+import { chequeosRepo } from "@/lib/repos/chequeos";
+import { perfilesRepo } from "@/lib/repos/perfiles";
+import { usuarioActual, borrarSesionLocal } from "@/lib/auth/sesion";
 import { Button } from "@/components/ui/button";
 import { Plus, LogOut, ChevronRight, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -33,32 +37,30 @@ function HomePage() {
 
   useEffect(() => {
     (async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (user.user) {
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.user.id).maybeSingle();
-        setName(profile?.full_name?.split(" ")[0] ?? "");
+      const usuario = await usuarioActual();
+      if (usuario) {
+        const perfil = await perfilesRepo.obtener(usuario.id);
+        const completo = perfil?.full_name ?? usuario.nombre ?? "";
+        setName(completo.split(" ")[0] ?? "");
       }
-      const { data: p } = await supabase
-        .from("patients")
-        .select("id, nombre, edad, valoracion_completa")
-        .order("created_at", { ascending: false });
-      setPatients(p ?? []);
-      if (p && p.length) {
-        const { data: c } = await supabase
-          .from("chequeos_diarios")
-          .select("patient_id, ieg, color, fecha")
-          .in("patient_id", p.map((x) => x.id))
-          .order("fecha", { ascending: false });
-        const map: Record<string, UltimoChequeo> = {};
-        for (const row of c ?? []) if (!map[row.patient_id]) map[row.patient_id] = row;
-        setUltimos(map);
+      const p = await pacientesRepo.listarMios();
+      setPatients(p as unknown as Patient[]);
+      if (p.length) {
+        setUltimos(
+          (await chequeosRepo.ultimosPorPaciente(p.map((x) => x.id))) as unknown as Record<string, UltimoChequeo>,
+        );
       }
       setLoading(false);
     })();
   }, []);
 
   async function signOut() {
-    await supabase.auth.signOut();
+    await borrarSesionLocal();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Sin conexión: la sesión local ya quedó borrada.
+    }
     toast.success("Sesión cerrada");
     navigate({ to: "/auth" });
   }
