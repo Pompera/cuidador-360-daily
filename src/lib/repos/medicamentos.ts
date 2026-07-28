@@ -72,7 +72,7 @@ export const tomasRepo = {
   },
   /** Registra la toma del día (una por medicamento y fecha). */
   async registrar(datos: {
-    owner_id: string;
+    owner_id?: string;
     patient_id: string;
     medicamento_id: string;
     fecha: string;

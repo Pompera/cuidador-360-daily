@@ -115,7 +115,7 @@ function Medicamentos() {
 
   async function registrar(medId: string, estado: "tomado" | "omitido") {
     try {
-      await tomasRepo.registrar({ owner_id: "", patient_id: id, medicamento_id: medId, fecha: hoy, estado });
+      await tomasRepo.registrar({ patient_id: id, medicamento_id: medId, fecha: hoy, estado });
     } catch { toast.error("No se pudo registrar"); return; }
     toast.success(estado === "tomado" ? "Marcado como tomado" : "Marcado como omitido");
     cargar();
