@@ -494,6 +494,7 @@ export type Database = {
           hora: string
           horario_id: string
           id: string
+          owner_id: string
         }
         Insert: {
           created_at?: string
@@ -501,6 +502,7 @@ export type Database = {
           hora: string
           horario_id: string
           id?: string
+          owner_id: string
         }
         Update: {
           created_at?: string
@@ -508,6 +510,7 @@ export type Database = {
           hora?: string
           horario_id?: string
           id?: string
+          owner_id?: string
         }
         Relationships: [
           {

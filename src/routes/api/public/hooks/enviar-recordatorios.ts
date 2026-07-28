@@ -83,7 +83,7 @@ export const Route = createFileRoute("/api/public/hooks/enviar-recordatorios")({
           // Anti-duplicado: si ya existe la fila, otro tick ya lo envió.
           const { error: dupErr } = await supabaseAdmin
             .from("recordatorio_envios")
-            .insert({ horario_id: h.id, fecha, hora });
+            .insert({ horario_id: h.id, owner_id: h.owner_id, fecha, hora });
           if (dupErr) {
             omitidos++;
             continue;
