@@ -66,10 +66,16 @@ export function crearRepositorio<T extends Record<string, unknown>>(tabla: strin
   /** Crea un registro. Funciona siempre, con o sin Internet. */
   async function crear(datos: Record<string, unknown>): Promise<T> {
     if (!usaModoOffline()) {
-      const { data, error } = await supabase.from(tabla as never).insert(datos as never).select("*").single();
+      const conDueno = { ...datos };
+      if (conDueno.owner_id == null) {
+        const u = await usuarioActual();
+        if (u) conDueno.owner_id = u.id;
+      }
+      const { data, error } = await supabase.from(tabla as never).insert(conDueno as never).select("*").single();
       if (error) throw error;
       return data as unknown as T;
     }
+
 
     const usuario = await usuarioActual();
     const ahora = new Date().toISOString();

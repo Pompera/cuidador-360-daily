@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Plus, AlertCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { signosRepo } from "@/lib/repos/signos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,8 +28,7 @@ function Signos() {
   const [alertas, setAlertas] = useState<Alerta[]>([]);
 
   async function cargar() {
-    const { data } = await supabase.from("signos_vitales").select("*").eq("patient_id", id).order("fecha", { ascending: false }).limit(30);
-    setRegs((data ?? []) as Registro[]);
+    setRegs((await signosRepo.recientes(id, 30)) as unknown as Registro[]);
   }
   useEffect(() => { cargar(); }, [id]);
 
@@ -59,12 +58,9 @@ function Signos() {
         return;
       }
     }
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase.from("signos_vitales").insert({
-      owner_id: u.user.id, patient_id: id, ...payload,
-    });
-    if (error) { toast.error("No se pudo guardar"); return; }
+    try {
+      await signosRepo.crear({ patient_id: id, fecha: new Date().toISOString(), ...payload });
+    } catch { toast.error("No se pudo guardar"); return; }
     const a = evaluarSignos(payload);
     setAlertas(a);
     setForm(empty);
