@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Plus, Check, X, Trash2, Bell, BellRing, Clock } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { medicamentosRepo, horariosRepo, tomasRepo } from "@/lib/repos/medicamentos";
+import { usaModoOffline } from "@/lib/plataforma";
+import { pedirPermisoLocal, permisoLocalConcedido, reprogramarRecordatorios, cancelarRecordatorios } from "@/lib/notificaciones/locales";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,23 +33,34 @@ function Medicamentos() {
   const hoy = fechaHoy();
 
   useEffect(() => {
+    if (usaModoOffline()) {
+      permisoLocalConcedido().then((ok) => setPermiso(ok ? "granted" : "default"));
+      return;
+    }
     setPermiso(pushSoportado() ? Notification.permission : "no-soportado");
   }, []);
 
   async function cargar() {
-    const { data: m } = await supabase.from("medicamentos").select("*").eq("patient_id", id).eq("activo", true).order("created_at");
-    setMeds((m ?? []) as Med[]);
-    const desde = new Date(); desde.setDate(desde.getDate() - 30);
-    const { data: t } = await supabase.from("medicamento_tomas").select("medicamento_id, fecha, estado").eq("patient_id", id).gte("fecha", desde.toISOString().slice(0, 10));
-    setTomas((t ?? []) as Toma[]);
-    const { data: h } = await supabase.from("medicamento_horarios").select("id, medicamento_id, hora, activo").eq("patient_id", id).order("hora");
-    setHorarios(((h ?? []) as Horario[]).map((x) => ({ ...x, hora: String(x.hora).slice(0, 5) })));
+    const m = await medicamentosRepo.activos(id);
+    setMeds(m as unknown as Med[]);
+    setTomas((await tomasRepo.recientes(id, 30)) as unknown as Toma[]);
+    const h = await horariosRepo.porPaciente(id);
+    setHorarios(h as unknown as Horario[]);
     setLoading(false);
+    // En el APK los recordatorios los dispara el propio teléfono.
+    void reprogramarRecordatorios(m, h);
   }
 
   useEffect(() => { cargar(); }, [id]);
 
   async function activarPush() {
+    if (usaModoOffline()) {
+      const ok = await pedirPermisoLocal();
+      setPermiso(ok ? "granted" : "default");
+      if (ok) { toast.success("Recordatorios activados en este dispositivo"); cargar(); }
+      else toast.error("Debes permitir las notificaciones");
+      return;
+    }
     const r = await activarNotificaciones(true);
     setPermiso(pushSoportado() ? Notification.permission : "no-soportado");
     if (r === "ok") toast.success("Recordatorios activados en este dispositivo");
@@ -58,20 +71,17 @@ function Medicamentos() {
 
   async function agregar() {
     if (!form.nombre.trim()) { toast.error("El nombre es obligatorio"); return; }
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { data: creado, error } = await supabase.from("medicamentos").insert({
-      owner_id: u.user.id, patient_id: id, nombre: form.nombre.trim(),
-      dosis: form.dosis.trim() || null, frecuencia: form.frecuencia.trim() || null,
-      fecha_inicio: form.fecha_inicio || null,
-    }).select("id").single();
-    if (error || !creado) { toast.error("No se pudo guardar"); return; }
+    let creado: { id: string };
+    try {
+      creado = await medicamentosRepo.crear({
+        patient_id: id, nombre: form.nombre.trim(),
+        dosis: form.dosis.trim() || null, frecuencia: form.frecuencia.trim() || null,
+        fecha_inicio: form.fecha_inicio || null, activo: true,
+      });
+    } catch { toast.error("No se pudo guardar"); return; }
 
-    const validos = nuevosHorarios.filter(Boolean);
-    if (validos.length) {
-      await supabase.from("medicamento_horarios").insert(
-        validos.map((hora) => ({ owner_id: u.user!.id, patient_id: id, medicamento_id: creado.id, hora })),
-      );
+    for (const hora of nuevosHorarios.filter(Boolean)) {
+      await horariosRepo.crear({ patient_id: id, medicamento_id: creado.id, hora, activo: true });
     }
     setForm({ nombre: "", dosis: "", frecuencia: "", fecha_inicio: "" });
     setNuevosHorarios([]);
@@ -83,42 +93,37 @@ function Medicamentos() {
   async function agregarHorario(medId: string) {
     const hora = nuevaHora[medId];
     if (!hora) { toast.error("Elige una hora"); return; }
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase.from("medicamento_horarios").insert({
-      owner_id: u.user.id, patient_id: id, medicamento_id: medId, hora,
-    });
-    if (error) { toast.error("No se pudo guardar el horario"); return; }
+    try {
+      await horariosRepo.crear({ patient_id: id, medicamento_id: medId, hora, activo: true });
+    } catch { toast.error("No se pudo guardar el horario"); return; }
     setNuevaHora({ ...nuevaHora, [medId]: "" });
     toast.success("Horario agregado");
     cargar();
   }
 
   async function alternarHorario(h: Horario) {
-    await supabase.from("medicamento_horarios").update({ activo: !h.activo }).eq("id", h.id);
+    await horariosRepo.actualizar(h.id, { activo: !h.activo });
     cargar();
   }
 
   async function borrarHorario(hId: string) {
-    await supabase.from("medicamento_horarios").delete().eq("id", hId);
+    const h = horarios.find((x) => x.id === hId);
+    if (h) await cancelarRecordatorios([h as never]);
+    await horariosRepo.eliminar(hId);
     cargar();
   }
 
   async function registrar(medId: string, estado: "tomado" | "omitido") {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase.from("medicamento_tomas").upsert(
-      { owner_id: u.user.id, patient_id: id, medicamento_id: medId, fecha: hoy, estado },
-      { onConflict: "medicamento_id,fecha" },
-    );
-    if (error) { toast.error("No se pudo registrar"); return; }
+    try {
+      await tomasRepo.registrar({ owner_id: "", patient_id: id, medicamento_id: medId, fecha: hoy, estado });
+    } catch { toast.error("No se pudo registrar"); return; }
     toast.success(estado === "tomado" ? "Marcado como tomado" : "Marcado como omitido");
     cargar();
   }
 
   async function suspender(medId: string) {
     if (!confirm("¿Suspender este medicamento?")) return;
-    await supabase.from("medicamentos").update({ activo: false }).eq("id", medId);
+    await medicamentosRepo.suspender(medId);
     cargar();
   }
 
