@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Plus, TriangleAlert } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { caidasRepo } from "@/lib/repos/caidas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,21 +27,19 @@ function Caidas() {
   const [form, setForm] = useState(empty);
 
   async function cargar() {
-    const { data } = await supabase.from("caidas").select("*").eq("patient_id", id).order("fecha", { ascending: false });
-    setItems((data ?? []) as Caida[]);
+    setItems((await caidasRepo.porPaciente(id)) as unknown as Caida[]);
   }
   useEffect(() => { cargar(); }, [id]);
 
   async function guardar() {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase.from("caidas").insert({
-      owner_id: u.user.id, patient_id: id,
-      fecha: form.fecha, lugar: form.lugar.trim() || null,
-      circunstancia: form.circunstancia.trim() || null, lesion: form.lesion.trim() || null,
-      golpe_craneal: form.golpe_craneal, hospitalizacion: form.hospitalizacion,
-    });
-    if (error) { toast.error("No se pudo guardar"); return; }
+    try {
+      await caidasRepo.crear({
+        patient_id: id,
+        fecha: form.fecha, lugar: form.lugar.trim() || null,
+        circunstancia: form.circunstancia.trim() || null, lesion: form.lesion.trim() || null,
+        golpe_craneal: form.golpe_craneal, hospitalizacion: form.hospitalizacion,
+      });
+    } catch { toast.error("No se pudo guardar"); return; }
     setForm(empty); setAdding(false);
     toast.success("Caída registrada");
     cargar();
