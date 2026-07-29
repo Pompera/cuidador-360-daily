@@ -68,43 +68,33 @@ function ReportePage() {
   // Carga inicial: paciente + basal + rango de meses
   useEffect(() => {
     (async () => {
-      const { data: pat } = await supabase.from("patients").select("*").eq("id", id).maybeSingle();
+      const pat = (await pacientesRepo.obtener(id)) as Record<string, any> | null;
       if (pat) {
         setP({
           nombre: pat.nombre,
-          edad: pat.edad,
-          sexo: pat.sexo,
+          edad: pat.edad ?? null,
+          sexo: pat.sexo ?? null,
           comorbilidades: (Array.isArray(pat.comorbilidades) ? pat.comorbilidades : []) as string[],
-          barthel_total: pat.barthel_total,
-          lawton_total: pat.lawton_total,
-          cfs_nivel: pat.cfs_nivel,
-          movilidad: pat.movilidad,
+          barthel_total: pat.barthel_total ?? null,
+          lawton_total: pat.lawton_total ?? null,
+          cfs_nivel: pat.cfs_nivel ?? null,
+          movilidad: pat.movilidad ?? null,
           objetivos: (Array.isArray(pat.objetivos) ? pat.objetivos : []) as string[],
-          jenkins_basal: (pat as any).jenkins_basal ?? null,
-          zarit_basal: (pat as any).zarit_basal ?? null,
+          jenkins_basal: pat.jenkins_basal ?? null,
+          zarit_basal: pat.zarit_basal ?? null,
         });
       }
 
-      const { data: b } = await supabase
-        .from("chequeos_diarios")
-        .select("fecha, ieg, color, respuestas")
-        .eq("patient_id", id)
-        .order("fecha", { ascending: true })
-        .limit(1);
-      const basalRow: ReporteChequeo | null = b?.[0] && b[0].ieg != null
-        ? { fecha: b[0].fecha, ieg: b[0].ieg as number, color: b[0].color as any, respuestas: (b[0].respuestas ?? {}) as any }
+      const todos = (await chequeosRepo.historial(id, 1000)) as any[];
+      const orden = [...todos].sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
+      const primero = orden.find((r) => r.ieg != null);
+      const basalRow: ReporteChequeo | null = primero
+        ? { fecha: primero.fecha, ieg: primero.ieg as number, color: primero.color as any, respuestas: (primero.respuestas ?? {}) as any }
         : null;
       setBasal(basalRow);
 
-      const { data: last } = await supabase
-        .from("chequeos_diarios")
-        .select("fecha")
-        .eq("patient_id", id)
-        .order("fecha", { ascending: false })
-        .limit(1);
-      if (basalRow && last?.[0]) {
-        setMesesDisponibles(mesesEntre(basalRow.fecha, last[0].fecha));
-      }
+      const ultimo = orden[orden.length - 1];
+      if (basalRow && ultimo) setMesesDisponibles(mesesEntre(basalRow.fecha, ultimo.fecha));
     })();
   }, [id]);
 
@@ -113,71 +103,41 @@ function ReportePage() {
     (async () => {
       setLoading(true);
       const filtro = periodo.tipo === "mes" ? rangoMes(periodo.anio, periodo.mes) : null;
+      const enPeriodo = (fecha: unknown) => {
+        if (!filtro) return true;
+        const f = String(fecha ?? "").slice(0, 10);
+        return f >= filtro.ini && f < filtro.finMes;
+      };
+      const desc = (a: any, b: any) => String(b.fecha).localeCompare(String(a.fecha));
 
-      const qChequeos = supabase
-        .from("chequeos_diarios")
-        .select("fecha, ieg, color, respuestas")
-        .eq("patient_id", id)
-        .order("fecha", { ascending: false });
-      if (filtro) qChequeos.gte("fecha", filtro.ini).lt("fecha", filtro.finMes);
-      else qChequeos.limit(1000);
-
-      const qSignos = supabase
-        .from("signos_vitales")
-        .select("fecha, ta_sistolica, ta_diastolica, fc, temperatura, saturacion, glucosa")
-        .eq("patient_id", id)
-        .order("fecha", { ascending: false });
-      if (filtro) qSignos.gte("fecha", filtro.ini).lt("fecha", filtro.finMes);
-      else qSignos.limit(1000);
-
-      const qCaidas = supabase
-        .from("caidas")
-        .select("fecha, lugar, circunstancia, lesion, golpe_craneal, hospitalizacion")
-        .eq("patient_id", id)
-        .order("fecha", { ascending: false });
-      if (filtro) qCaidas.gte("fecha", filtro.ini).lt("fecha", filtro.finMes);
-
-      const qTomas = supabase
-        .from("medicamento_tomas")
-        .select("medicamento_id, fecha, estado")
-        .eq("patient_id", id);
-      if (filtro) qTomas.gte("fecha", filtro.ini).lt("fecha", filtro.finMes);
-
-      const qEvals = supabase
-        .from("evaluaciones_escala")
-        .select("tipo, fecha, puntaje")
-        .eq("patient_id", id)
-        .order("fecha", { ascending: false });
-      if (filtro) qEvals.gte("fecha", filtro.ini).lt("fecha", filtro.finMes);
-
-      const qProfs = supabase
-        .from("profundizaciones_clinicas")
-        .select("fecha, dominio_principal, nivel_deterioro, resumen")
-        .eq("patient_id", id)
-        .order("fecha", { ascending: false });
-      if (filtro) qProfs.gte("fecha", filtro.ini).lt("fecha", filtro.finMes);
-
-      const [{ data: c }, { data: meds }, { data: tomas }, { data: signos }, { data: caidas }, { data: evals }, { data: profs }] = await Promise.all([
-        qChequeos,
-        supabase.from("medicamentos").select("id, nombre, dosis, frecuencia, fecha_inicio").eq("patient_id", id).eq("activo", true).order("created_at"),
-        qTomas,
-        qSignos,
-        qCaidas,
-        qEvals,
-        qProfs,
+      const [c, meds, tomas, signos, caidas, evals, profs] = await Promise.all([
+        chequeosRepo.historial(id, 1000),
+        medicamentosRepo.activos(id),
+        tomasRepo.listar({ filtros: { patient_id: id } }),
+        signosRepo.recientes(id, 1000),
+        caidasRepo.porPaciente(id),
+        escalasRepo.porPaciente(id),
+        profundizacionesRepo.listar({
+          filtros: { patient_id: id },
+          ordenar: { campo: "fecha", ascendente: false },
+        }),
       ]);
 
-      setChequeos(((c ?? []) as any).map((r: any) => ({
-        fecha: r.fecha, ieg: r.ieg, color: r.color, respuestas: r.respuestas ?? {},
-      })));
+      setChequeos(
+        (c as any[])
+          .filter((r) => enPeriodo(r.fecha))
+          .sort(desc)
+          .map((r) => ({ fecha: r.fecha, ieg: r.ieg, color: r.color, respuestas: r.respuestas ?? {} })),
+      );
       setExtras({
-        medicamentos: (meds ?? []) as any,
-        tomas: (tomas ?? []) as Toma[],
-        signos: (signos ?? []) as any,
-        caidas: (caidas ?? []) as any,
-        evaluaciones: (evals ?? []) as any,
-        profundizaciones: (profs ?? []) as any,
+        medicamentos: meds as any,
+        tomas: (tomas as any[]).filter((t) => enPeriodo(t.fecha)) as Toma[],
+        signos: (signos as any[]).filter((s) => enPeriodo(s.fecha)).sort(desc) as any,
+        caidas: (caidas as any[]).filter((r) => enPeriodo(r.fecha)).sort(desc) as any,
+        evaluaciones: (evals as any[]).filter((r) => enPeriodo(r.fecha)).sort(desc) as any,
+        profundizaciones: (profs as any[]).filter((r) => enPeriodo(r.fecha)).sort(desc) as any,
       });
+
       setLoading(false);
     })();
   }, [id, periodo]);
