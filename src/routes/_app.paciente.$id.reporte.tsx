@@ -1,7 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, FileDown } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { pacientesRepo } from "@/lib/repos/pacientes";
+import { chequeosRepo } from "@/lib/repos/chequeos";
+import { medicamentosRepo, tomasRepo } from "@/lib/repos/medicamentos";
+import { signosRepo } from "@/lib/repos/signos";
+import { caidasRepo } from "@/lib/repos/caidas";
+import { escalasRepo } from "@/lib/repos/escalas";
+import { profundizacionesRepo } from "@/lib/repos/profundizaciones";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
