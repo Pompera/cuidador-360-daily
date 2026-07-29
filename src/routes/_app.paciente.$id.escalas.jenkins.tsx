@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { escalasRepo } from "@/lib/repos/escalas";
+import { pacientesRepo } from "@/lib/repos/pacientes";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { JENKINS_ITEMS, JENKINS_OPTIONS, interpretJenkins, deltaJenkins } from "@/lib/clinical/jenkins";
@@ -23,16 +24,10 @@ function JenkinsPage() {
 
   useEffect(() => {
     (async () => {
-      const { data: p } = await supabase.from("patients").select("jenkins_basal").eq("id", id).maybeSingle();
-      setBasal((p?.jenkins_basal as number | null) ?? null);
-      const { data: ev } = await supabase
-        .from("evaluaciones_escala")
-        .select("id, fecha, puntaje")
-        .eq("patient_id", id)
-        .eq("tipo", "jenkins")
-        .order("fecha", { ascending: false })
-        .limit(12);
-      setHistorial((ev ?? []) as Evaluacion[]);
+      const pac = await pacientesRepo.obtener(id);
+      setBasal(((pac as Record<string, unknown> | null)?.jenkins_basal as number | null) ?? null);
+      const ev = await escalasRepo.historial(id, "jenkins", 12);
+      setHistorial(ev as unknown as Evaluacion[]);
       setLoading(false);
     })();
   }, [id]);
@@ -44,16 +39,12 @@ function JenkinsPage() {
     if (!done) return;
     setSaving(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Sesión expirada");
-      const { error } = await supabase.from("evaluaciones_escala").insert({
-        owner_id: u.user.id,
+      await escalasRepo.registrar({
         patient_id: id,
         tipo: "jenkins",
         puntaje: total,
         respuestas,
       });
-      if (error) throw error;
       toast.success("Evaluación guardada");
       navigate({ to: "/paciente/$id/escalas", params: { id } });
     } catch (err) {
