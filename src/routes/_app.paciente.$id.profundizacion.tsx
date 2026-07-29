@@ -2,7 +2,9 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { chequeosRepo } from "@/lib/repos/chequeos";
+import { profundizacionesRepo } from "@/lib/repos/profundizaciones";
+import { fechaHoy } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { detectarAlertas, labelDominio, type Dominio } from "@/lib/clinical/alertas";
@@ -57,12 +59,7 @@ function ProfundizacionPage() {
           .split(",")
           .filter((d: string): d is Dominio => DOMINIOS_VALIDOS.includes(d as Dominio));
       }
-      const { data: hist } = await supabase
-        .from("chequeos_diarios")
-        .select("id, fecha, ieg, respuestas")
-        .eq("patient_id", id)
-        .order("fecha", { ascending: false })
-        .limit(7);
+      const hist = await chequeosRepo.historial(id, 7);
       const arr = (hist ?? []) as Array<{ id: string; fecha: string; ieg: number; respuestas: Record<string, string | string[]> }>;
       const det = detectarAlertas(arr);
       if (doms.length === 0) doms = det.dominios;
@@ -97,13 +94,10 @@ function ProfundizacionPage() {
     setSaving(true);
     try {
       const resultado = evaluarProfundizacion(dominios, curr, alertasDet);
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Sesión expirada");
-      const hoy = new Date().toISOString().slice(0, 10);
+      const hoy = fechaHoy();
 
-      const { error } = await supabase.from("profundizaciones_clinicas").insert({
+      await profundizacionesRepo.crear({
         patient_id: id,
-        owner_id: u.user.id,
         fecha: hoy,
         chequeo_id: chequeoId,
         dominios,
@@ -112,16 +106,12 @@ function ProfundizacionPage() {
         nivel_deterioro: resultado.nivel,
         resumen: resultado.resumen,
       });
-      if (error) throw error;
 
       // Ajustar IEG del chequeo del día
       if (chequeoId && chequeoIegBasal != null) {
         const iegAj = Math.max(0, Math.min(100, chequeoIegBasal + ajusteIEG(resultado.nivel)));
         const nuevoColor = colorPorIEG(iegAj);
-        await supabase
-          .from("chequeos_diarios")
-          .update({ ieg: iegAj, color: nuevoColor })
-          .eq("id", chequeoId);
+        await chequeosRepo.actualizar(chequeoId, { ieg: iegAj, color: nuevoColor });
       }
 
       setDone(resultado);
