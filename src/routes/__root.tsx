@@ -111,7 +111,9 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+    let sub: { subscription: { unsubscribe: () => void } } | null = null;
+    try {
+      sub = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       if (event !== "SIGNED_OUT") {
@@ -119,8 +121,11 @@ function RootComponent() {
         // Guarda la sesión en el dispositivo para poder entrar sin Internet.
         void guardarSesionLocal();
       }
-    });
-    return () => sub.subscription.unsubscribe();
+      }).data;
+    } catch {
+      // Sin conexión / sin cliente: el arranque se apoya en la sesión local.
+    }
+    return () => sub?.subscription.unsubscribe();
   }, [router, queryClient]);
 
   // Modo offline (APK): abre la base local, restaura la sesión guardada

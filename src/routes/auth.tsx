@@ -6,12 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { leerSesionLocal } from "@/lib/auth/sesion";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) throw redirect({ to: "/app" });
+    // Tolerante a la falta de Internet: en el APK la sesión guardada en el
+    // dispositivo también sirve para entrar directo.
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) throw redirect({ to: "/app" });
+    } catch (e) {
+      if (e && typeof e === "object" && "to" in e) throw e;
+    }
+    const local = await leerSesionLocal();
+    if (local) throw redirect({ to: "/app" });
   },
   component: AuthPage,
 });
