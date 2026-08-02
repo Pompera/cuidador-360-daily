@@ -6,10 +6,21 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+// APK_BUILD=1 -> salida estática (SPA) para empaquetar dentro del APK de Capacitor.
+// Sin la bandera el build es exactamente el de siempre: SSR + Nitro para la web.
+const esApk = process.env.APK_BUILD === "1";
+
 export default defineConfig({
-  tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
-  },
+  // En el APK no hay servidor Node: no se genera salida Nitro.
+  nitro: esApk ? false : undefined,
+  tanstackStart: esApk
+    ? {
+        // Shell SPA prerenderizado: index.html + assets servibles desde el teléfono.
+        spa: { enabled: true, prerender: { outputPath: "/index.html" } },
+      }
+    : {
+        // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
+        // nitro/vite builds from this
+        server: { entry: "server" },
+      },
 });
