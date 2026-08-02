@@ -20,7 +20,7 @@ import {
 } from "@/lib/pdf";
 import type { Toma } from "@/lib/clinical/medicamentos";
 import { fechaHoy } from "@/lib/utils";
-import logoC360 from "@/assets/logo-c360.png.asset.json";
+import { logoUrl } from "@/lib/logo";
 
 async function cargarLogoDataUrl(url: string): Promise<string | null> {
   try {
@@ -157,7 +157,7 @@ function ReportePage() {
   async function descargar() {
     if (!p) return;
     try {
-      const logoDataUrl = await cargarLogoDataUrl(logoC360.url);
+      const logoDataUrl = await cargarLogoDataUrl(logoUrl());
       const meta: ReporteMeta = { periodo, periodoLabel: periodoLabel(periodo), basal, logoDataUrl };
       const doc = generarReportePDF(p, chequeos, extras, meta);
       const nombre = p.nombre.replace(/\s+/g, "_");
