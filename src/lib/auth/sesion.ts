@@ -7,6 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { usaModoOffline } from "@/lib/plataforma";
+import { Preferences } from "@capacitor/preferences";
 
 const CLAVE = "cuidador360.sesion";
 
@@ -24,11 +25,6 @@ interface SesionGuardada {
 }
 
 let cache: SesionGuardada | null = null;
-
-async function preferences() {
-  const { Preferences } = await import("@capacitor/preferences");
-  return Preferences;
-}
 
 /** Persiste la sesión actual para poder abrir la app sin conexión. */
 export async function guardarSesionLocal(): Promise<void> {
@@ -48,8 +44,7 @@ export async function guardarSesionLocal(): Promise<void> {
     guardada_en: new Date().toISOString(),
   };
   cache = guardada;
-  const P = await preferences();
-  await P.set({ key: CLAVE, value: JSON.stringify(guardada) });
+  await Preferences.set({ key: CLAVE, value: JSON.stringify(guardada) });
 }
 
 /** Recupera la sesión guardada (si existe). */
@@ -57,8 +52,7 @@ export async function leerSesionLocal(): Promise<SesionGuardada | null> {
   if (!usaModoOffline()) return null;
   if (cache) return cache;
   try {
-    const P = await preferences();
-    const { value } = await P.get({ key: CLAVE });
+    const { value } = await Preferences.get({ key: CLAVE });
     cache = value ? (JSON.parse(value) as SesionGuardada) : null;
     return cache;
   } catch {
@@ -71,8 +65,7 @@ export async function borrarSesionLocal(): Promise<void> {
   cache = null;
   if (!usaModoOffline()) return;
   try {
-    const P = await preferences();
-    await P.remove({ key: CLAVE });
+    await Preferences.remove({ key: CLAVE });
   } catch {
     /* sin efecto */
   }
