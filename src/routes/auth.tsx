@@ -12,16 +12,22 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   beforeLoad: async () => {
     // Tolerante a la falta de Internet: en el APK la sesión guardada en el
-    // dispositivo también sirve para entrar directo.
+    // dispositivo también sirve para entrar directo. Ningún fallo de arranque
+    // debe impedir que /auth se monte.
     try {
       const { data } = await supabase.auth.getSession();
       if (data.session) throw redirect({ to: "/app" });
     } catch (e) {
       if (e && typeof e === "object" && "to" in e) throw e;
     }
-    const local = await leerSesionLocal();
-    if (local) throw redirect({ to: "/app" });
+    try {
+      const local = await leerSesionLocal();
+      if (local) throw redirect({ to: "/app" });
+    } catch (e) {
+      if (e && typeof e === "object" && "to" in e) throw e;
+    }
   },
+
   component: AuthPage,
 });
 
