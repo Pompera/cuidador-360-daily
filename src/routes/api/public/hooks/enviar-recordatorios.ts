@@ -31,14 +31,18 @@ export const Route = createFileRoute("/api/public/hooks/enviar-recordatorios")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const expected =
-          process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        const apikey =
-          request.headers.get("apikey") ??
+        // Autorización: secreto exclusivo del servidor (nunca viaja al cliente).
+        const expected = process.env.CRON_SECRET;
+        const provided =
+          request.headers.get("x-cron-secret") ??
           request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-        if (!expected || apikey !== expected) {
+        if (!expected) {
+          return new Response("Not configured", { status: 500 });
+        }
+        if (!provided || provided !== expected) {
           return new Response("Unauthorized", { status: 401 });
         }
+
 
         const vapid = {
           publicKey: process.env.VAPID_PUBLIC_KEY!,
