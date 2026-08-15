@@ -52,7 +52,7 @@ viejas quedan inválidas).
 
    ```bash
    curl -X POST https://<dominio>/api/public/hooks/enviar-recordatorios \
-     -H "apikey: <clave pública del proyecto>" -H "content-type: application/json" -d '{}'
+     -H "x-cron-secret: <valor del secreto CRON_SECRET>" -H "content-type: application/json" -d '{}'
    ```
 
    Responde `{ ok: true, horarios, enviados, omitidos }`. Una segunda llamada en la
