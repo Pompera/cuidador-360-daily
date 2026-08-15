@@ -1,12 +1,12 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
+import { entrarConGoogle, googleDisponible, baseEnlacesWeb } from "@/lib/auth/google";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { leerSesionLocal } from "@/lib/auth/sesion";
+import { guardarSesionLocal, leerSesionLocal } from "@/lib/auth/sesion";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -44,19 +44,27 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const base = baseEnlacesWeb();
+        const { data, error } = await supabase.auth.signUp({
           email, password,
           options: {
-            emailRedirectTo: window.location.origin + "/app",
+            ...(base ? { emailRedirectTo: base + "/app" } : {}),
             data: { full_name: name },
           },
         });
         if (error) throw error;
+        if (!data.session) {
+          toast.success("Cuenta creada. Confirma tu correo y vuelve a entrar.");
+          setMode("signin");
+          return;
+        }
+        await guardarSesionLocal();
         toast.success("Cuenta creada. ¡Bienvenido!");
         navigate({ to: "/app" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        await guardarSesionLocal();
         navigate({ to: "/app" });
       }
     } catch (err) {
@@ -66,11 +74,14 @@ function AuthPage() {
     }
   }
 
+  const conGoogle = googleDisponible();
+
   async function google() {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/app" });
+    const result = await entrarConGoogle();
     if (result.error) { toast.error("Error con Google"); setLoading(false); return; }
     if (result.redirected) return;
+    await guardarSesionLocal();
     navigate({ to: "/app" });
   }
 
@@ -88,14 +99,18 @@ function AuthPage() {
         </div>
 
         <div className="mt-8 rounded-3xl border border-border/60 bg-card p-6 shadow-[var(--shadow-card)]">
-          <Button onClick={google} disabled={loading} variant="outline" size="xl" className="mb-4">
-            <GoogleIcon /> Continuar con Google
-          </Button>
-          <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 h-px bg-border" />
-            <span className="text-sm text-muted-foreground">o</span>
-            <div className="flex-1 h-px bg-border" />
-          </div>
+          {conGoogle && (
+            <>
+              <Button onClick={google} disabled={loading} variant="outline" size="xl" className="mb-4">
+                <GoogleIcon /> Continuar con Google
+              </Button>
+              <div className="flex items-center gap-3 my-4">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-sm text-muted-foreground">o</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+            </>
+          )}
           <form onSubmit={submit} className="space-y-4">
             {mode === "signup" && (
               <div>
