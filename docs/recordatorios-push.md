@@ -52,7 +52,7 @@ viejas quedan inválidas).
 
    ```bash
    curl -X POST https://<dominio>/api/public/hooks/enviar-recordatorios \
-     -H "apikey: <clave pública del proyecto>" -H "content-type: application/json" -d '{}'
+     -H "x-cron-secret: <valor del secreto CRON_SECRET>" -H "content-type: application/json" -d '{}'
    ```
 
    Responde `{ ok: true, horarios, enviados, omitidos }`. Una segunda llamada en la
@@ -61,6 +61,12 @@ viejas quedan inválidas).
    (Compartir → Agregar a inicio) para que las notificaciones funcionen.
 
 ## Notas
+
+- **Autorización:** el endpoint solo acepta llamadas con la cabecera `x-cron-secret`
+  (o `Authorization: Bearer …`) igual al secreto `CRON_SECRET`, que vive únicamente en el
+  servidor. La clave pública del proyecto ya NO sirve para llamarlo. Si cambias
+  `CRON_SECRET`, actualiza también la cabecera del job de `pg_cron`.
+
 
 - El cron apunta al dominio de producción; hasta publicar la app, los envíos
   automáticos no se disparan (la prueba manual sí funciona en la vista previa).
