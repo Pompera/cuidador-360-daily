@@ -128,3 +128,20 @@ hidratar. Para verlo:
    los `/assets/*.js` devuelvan 200 (no 404).
 6. Comprueba también que `apk-www/assets/` exista tras `npm run build:apk` y que
    corriste `npx cap sync android` después del build.
+
+## Inicio de sesión en el APK
+
+El APK no tiene servidor propio: se sirve desde archivos locales (`https://localhost`).
+Por eso el flujo de Google del SDK de Lovable, que llama a la ruta **relativa**
+`/~oauth/initiate`, devuelve **error 404** dentro del WebView.
+
+- **Correo y contraseña**: funciona siempre (habla directo con el backend).
+- **Google**: solo aparece si al compilar el APK defines la URL del sitio publicado:
+
+```bash
+VITE_SITE_URL="https://<tu-sitio>.lovable.app" npm run build:apk
+```
+
+Sin `VITE_SITE_URL` el botón de Google se oculta en el APK (en la web sigue igual).
+Esa misma URL se usa como destino de los correos de confirmación de cuenta, ya que
+un enlace a `https://localhost/app` no abriría en el teléfono.
