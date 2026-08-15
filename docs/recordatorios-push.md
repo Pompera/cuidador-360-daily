@@ -62,6 +62,12 @@ viejas quedan inválidas).
 
 ## Notas
 
+- **Autorización:** el endpoint solo acepta llamadas con la cabecera `x-cron-secret`
+  (o `Authorization: Bearer …`) igual al secreto `CRON_SECRET`, que vive únicamente en el
+  servidor. La clave pública del proyecto ya NO sirve para llamarlo. Si cambias
+  `CRON_SECRET`, actualiza también la cabecera del job de `pg_cron`.
+
+
 - El cron apunta al dominio de producción; hasta publicar la app, los envíos
   automáticos no se disparan (la prueba manual sí funciona en la vista previa).
 - Si un push devuelve 404/410, la suscripción se elimina automáticamente.
