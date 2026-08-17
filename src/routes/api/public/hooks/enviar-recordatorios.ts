@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { timingSafeEqual } from "crypto";
 
 // Endpoint llamado por el cron cada 5 minutos. Envía los recordatorios de
 // medicamentos cuya hora cae en la ventana actual. NUNCA toca medicamento_tomas.
