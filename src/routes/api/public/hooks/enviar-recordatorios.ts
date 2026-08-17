@@ -40,7 +40,12 @@ export const Route = createFileRoute("/api/public/hooks/enviar-recordatorios")({
         if (!expected) {
           return new Response("Not configured", { status: 500 });
         }
-        if (!provided || provided !== expected) {
+        // Comparación a prueba de ataques de tiempo (constant-time).
+        const esValido =
+          !!provided &&
+          provided.length === expected.length &&
+          timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+        if (!esValido) {
           return new Response("Unauthorized", { status: 401 });
         }
 
